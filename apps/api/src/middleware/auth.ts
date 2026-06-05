@@ -1,3 +1,4 @@
+import { timingSafeEqual } from 'crypto'
 import { Request, Response, NextFunction } from 'express'
 import jwt from 'jsonwebtoken'
 
@@ -19,9 +20,21 @@ declare global {
   }
 }
 
+function verifyInternalSecret(req: Request): boolean {
+  const incoming = req.headers['x-internal-secret']
+  if (!incoming || typeof incoming !== 'string') return false
+  const expectedSecret = process.env.INTERNAL_API_SECRET!
+  try {
+    const a = Buffer.from(incoming)
+    const b = Buffer.from(expectedSecret)
+    return a.length === b.length && timingSafeEqual(a, b)
+  } catch {
+    return false
+  }
+}
+
 export function requireAuth(req: Request, res: Response, next: NextFunction): void {
-  const secret = req.headers['x-internal-secret']
-  if (secret !== process.env.INTERNAL_API_SECRET) {
+  if (!verifyInternalSecret(req)) {
     res.status(401).json({ error: 'Unauthorized' })
     return
   }
@@ -41,25 +54,24 @@ export function requireAuth(req: Request, res: Response, next: NextFunction): vo
   }
 }
 
-// Optional auth — doesn't fail if no token, just sets req.user if present
-export function optionalAuth(req: Request, _res: Response, next: NextFunction): void {
-  const secret = req.headers['x-internal-secret']
-  if (secret !== process.env.INTERNAL_API_SECRET) {
-    next() // No secret = treat as unauthenticated public call
-    return
+// Optional auth — sets req.user if a valid secret + valid token are present.
+// Rejects with 401 if a valid secret is paired with an invalid token (suspicious).
+export function optionalAuth(req: Request, res: Response, next: NextFunction): void {
+  if (!verifyInternalSecret(req)) {
+    return next() // No valid secret = unauthenticated public call
   }
 
   const authHeader = req.headers['x-user-token']
   if (!authHeader || typeof authHeader !== 'string') {
-    next()
-    return
+    return next() // No token = unauthenticated
   }
 
   try {
     const payload = jwt.verify(authHeader, process.env.NEXTAUTH_SECRET!) as JwtPayload
     req.user = payload
+    next()
   } catch {
-    // Invalid token — treat as unauthenticated
+    // Valid secret + invalid token = suspicious, reject
+    res.status(401).json({ error: 'Invalid user token' })
   }
-  next()
 }

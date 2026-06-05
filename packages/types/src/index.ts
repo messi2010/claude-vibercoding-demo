@@ -2,7 +2,9 @@
 export type Role = 'USER' | 'ADMIN'
 export type AuthProvider = 'LOCAL' | 'GOOGLE' | 'FACEBOOK'
 export type StoryStatus = 'ONGOING' | 'COMPLETED'
-export type Genre = 'horror' | 'fantasy' | 'martial_arts' | 'romance' | 'adult'
+
+// Genre values used throughout the app (not DB-enforced — stored as plain strings)
+export type GenreValue = 'horror' | 'fantasy' | 'martial_arts' | 'romance' | 'adult'
 
 // Core entities
 export interface User {
@@ -19,6 +21,13 @@ export interface User {
   // password omitted from public type
 }
 
+// The Prisma StoryGenre join record
+export interface StoryGenre {
+  storyId: string
+  genre: string
+}
+
+// Base Story as stored (genres comes as a relation — use StoryResponse for API responses)
 export interface Story {
   id: string
   title: string
@@ -27,9 +36,13 @@ export interface Story {
   coverImage: string | null
   status: StoryStatus
   isAdult: boolean
-  genres: string[]
   createdAt: Date
   updatedAt: Date
+}
+
+// Story as returned from API (with genres flattened to string[])
+export interface StoryResponse extends Story {
+  genres: string[]
 }
 
 export interface Chapter {
@@ -54,7 +67,7 @@ export interface ReadingProgress {
   chapterId: string
   pageNumber: number
   updatedAt: Date
-  story?: Pick<Story, 'id' | 'title' | 'slug' | 'coverImage'>
+  story?: Pick<StoryResponse, 'id' | 'title' | 'slug' | 'coverImage'>
 }
 
 // API response wrapper
@@ -82,7 +95,7 @@ export interface CreateStoryBody {
   description?: string
   isAdult?: boolean
   status?: StoryStatus
-  genres?: string[]
+  genres?: GenreValue[]
 }
 
 export interface CreateChapterBody {

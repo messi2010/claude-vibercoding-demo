@@ -1,4 +1,8 @@
 import 'dotenv/config'
+
+if (!process.env.NEXTAUTH_SECRET) throw new Error('NEXTAUTH_SECRET is not set')
+if (!process.env.INTERNAL_API_SECRET) throw new Error('INTERNAL_API_SECRET is not set')
+
 import express, { Application } from 'express'
 import cors from 'cors'
 import { storiesRouter } from './routes/stories'
@@ -7,7 +11,7 @@ import { profileRouter } from './routes/profile'
 import { adminRouter } from './routes/admin'
 
 const app: Application = express()
-const PORT = parseInt(process.env.PORT || '4000')
+const PORT = parseInt(process.env.PORT || '4000', 10)
 
 app.use(cors({ origin: process.env.ALLOWED_ORIGIN || 'http://localhost:3000' }))
 app.use(express.json())

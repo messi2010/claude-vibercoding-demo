@@ -8,6 +8,7 @@ import { Navbar } from '../../components/Navbar'
 import { AgeGate } from '../../components/AgeGate'
 import { ChapterList } from './ChapterList'
 import { ExpandableDescription } from './ExpandableDescription'
+import { GenreCover } from '../../components/GenreCover'
 
 interface StoryWithChapters extends StoryResponse {
   chapters: Chapter[]
@@ -101,7 +102,9 @@ export default async function StoryPage({ params }: StoryPageProps) {
                   priority
                 />
               ) : (
-                <div className="absolute inset-0 flex items-center justify-center text-6xl">📖</div>
+                <div className="absolute inset-0">
+                  <GenreCover title={story.title} genres={story.genres} id={story.slug} />
+                </div>
               )}
             </div>
           </div>

@@ -526,7 +526,7 @@ async function main() {
         description: s.description,
         status: s.status,
         isAdult: s.isAdult,
-        coverImage: s.coverImage ?? `https://picsum.photos/seed/${s.slug}/300/450`,
+        coverImage: s.coverImage ?? null,
         genres: { create: s.genres.map((g) => ({ genre: g })) },
       },
     })

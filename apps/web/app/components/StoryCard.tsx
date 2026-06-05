@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import type { StoryResponse } from '@truyen/types'
+import { GenreCover } from './GenreCover'
 
 const GENRE_LABELS: Record<string, string> = {
   horror: 'Kinh Dị',
@@ -37,8 +38,8 @@ export function StoryCard({ story }: StoryCardProps) {
               sizes="(max-width: 768px) 50vw, 25vw"
             />
           ) : (
-            <div className="absolute inset-0 flex items-center justify-center text-4xl">
-              📖
+            <div className="absolute inset-0 transition-transform duration-300 group-hover:scale-105">
+              <GenreCover title={story.title} genres={story.genres} id={story.slug} />
             </div>
           )}
           {/* Status badge */}

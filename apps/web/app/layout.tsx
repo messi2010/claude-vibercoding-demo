@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { Providers } from "./components/Providers";
 
 export const metadata: Metadata = {
-  title: "Truyện Reading",
+  title: "TruyệnHay - Đọc Truyện Online",
   description: "Vietnamese novel reading website",
 };
 
@@ -13,7 +14,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="vi">
-      <body>{children}</body>
+      <body>
+        <Providers>{children}</Providers>
+      </body>
     </html>
   );
 }

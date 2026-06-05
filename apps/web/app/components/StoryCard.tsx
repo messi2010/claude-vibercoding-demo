@@ -1,0 +1,82 @@
+import Link from 'next/link'
+import Image from 'next/image'
+import type { StoryResponse } from '@truyen/types'
+
+const GENRE_LABELS: Record<string, string> = {
+  horror: 'Kinh Dị',
+  fantasy: 'Huyền Huyễn',
+  martial_arts: 'Kiếm Hiệp',
+  romance: 'Ngôn Tình',
+  adult: '18+',
+}
+
+const GENRE_COLORS: Record<string, string> = {
+  horror: 'bg-red-900 text-red-200',
+  fantasy: 'bg-purple-900 text-purple-200',
+  martial_arts: 'bg-yellow-900 text-yellow-200',
+  romance: 'bg-pink-900 text-pink-200',
+  adult: 'bg-red-800 text-red-100',
+}
+
+interface StoryCardProps {
+  story: StoryResponse
+}
+
+export function StoryCard({ story }: StoryCardProps) {
+  return (
+    <Link href={`/stories/${story.slug}`} className="group block">
+      <div className="bg-surface rounded-xl overflow-hidden border border-deep hover:border-accent transition-colors">
+        {/* Cover */}
+        <div className="relative w-full aspect-[2/3] bg-deep">
+          {story.coverImage ? (
+            <Image
+              src={story.coverImage}
+              alt={story.title}
+              fill
+              className="object-cover"
+              sizes="(max-width: 768px) 50vw, 25vw"
+            />
+          ) : (
+            <div className="absolute inset-0 flex items-center justify-center text-4xl">
+              📖
+            </div>
+          )}
+          {/* Status badge */}
+          <div className="absolute top-2 right-2">
+            <span
+              className={`text-xs px-2 py-0.5 rounded font-medium ${
+                story.status === 'COMPLETED'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-green-700 text-white'
+              }`}
+            >
+              {story.status === 'COMPLETED' ? 'Hoàn thành' : 'Đang ra'}
+            </span>
+          </div>
+          {story.isAdult && (
+            <div className="absolute top-2 left-2">
+              <span className="text-xs px-2 py-0.5 rounded bg-red-700 text-white font-bold">18+</span>
+            </div>
+          )}
+        </div>
+
+        {/* Info */}
+        <div className="p-3">
+          <h3 className="text-white font-semibold text-sm line-clamp-2 group-hover:text-accent transition-colors">
+            {story.title}
+          </h3>
+          <div className="flex flex-wrap gap-1 mt-2">
+            {story.genres.slice(0, 2).map((g) => (
+              <span
+                key={g}
+                className={`text-xs px-2 py-0.5 rounded-full ${GENRE_COLORS[g] ?? 'bg-gray-700 text-gray-300'}`}
+              >
+                {GENRE_LABELS[g] ?? g}
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
+    </Link>
+  )
+}

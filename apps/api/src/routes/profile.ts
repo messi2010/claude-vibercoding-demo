@@ -52,6 +52,12 @@ profileRouter.patch('/', async (req: Request, res: Response): Promise<void> => {
     updateData.isAgeVerified = age >= 18
   }
 
+  const existing = await prisma.user.findUnique({ where: { id: userId } })
+  if (!existing) {
+    res.status(404).json({ error: 'User not found' })
+    return
+  }
+
   const user = await prisma.user.update({
     where: { id: userId },
     data: updateData,

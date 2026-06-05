@@ -35,6 +35,12 @@ progressRouter.patch('/', async (req: Request, res: Response): Promise<void> => 
     return
   }
 
+  const story = await prisma.story.findUnique({ where: { id: storyId } })
+  if (!story) {
+    res.status(404).json({ error: 'Story not found' })
+    return
+  }
+
   const record = await prisma.readingProgress.upsert({
     where: { userId_storyId: { userId, storyId } },
     create: { userId, storyId, chapterId, pageNumber },

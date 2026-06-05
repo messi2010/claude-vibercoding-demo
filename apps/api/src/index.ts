@@ -3,8 +3,10 @@ import 'dotenv/config'
 if (!process.env.NEXTAUTH_SECRET) throw new Error('NEXTAUTH_SECRET is not set')
 if (!process.env.INTERNAL_API_SECRET) throw new Error('INTERNAL_API_SECRET is not set')
 
+import path from 'path'
 import express, { Application } from 'express'
 import cors from 'cors'
+import multer from 'multer'
 import { storiesRouter } from './routes/stories'
 import { progressRouter } from './routes/progress'
 import { profileRouter } from './routes/profile'
@@ -15,7 +17,7 @@ const PORT = parseInt(process.env.PORT || '4000', 10)
 
 app.use(cors({ origin: process.env.ALLOWED_ORIGIN || 'http://localhost:3000' }))
 app.use(express.json())
-app.use('/uploads', express.static('uploads'))
+app.use('/uploads', express.static(path.resolve(__dirname, '../uploads')))
 
 app.get('/health', (_req, res) => res.json({ status: 'ok' }))
 
@@ -24,9 +26,18 @@ app.use('/progress', progressRouter)
 app.use('/profile', profileRouter)
 app.use('/admin', adminRouter)
 
+// Multer error handler (file too large, wrong type)
+app.use((err: Error, _req: express.Request, res: express.Response, next: express.NextFunction): void => {
+  if (err instanceof multer.MulterError || err.message === 'Only image files are allowed') {
+    res.status(400).json({ error: err.message })
+    return
+  }
+  next(err)
+})
+
 // Global error handler
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction): void => {
   console.error(err.stack)
   res.status(500).json({ error: 'Internal server error' })
 })

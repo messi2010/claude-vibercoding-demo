@@ -84,14 +84,14 @@ adminRouter.patch('/stories/:id', async (req: Request, res: Response): Promise<v
     }
   }
 
-  // If genres provided, replace all existing StoryGenre records
+  // If genres provided, replace all existing StoryGenre records atomically
   if (genres !== undefined) {
-    await prisma.storyGenre.deleteMany({ where: { storyId: id } })
-    if (genres.length > 0) {
-      await prisma.storyGenre.createMany({
-        data: genres.map((g) => ({ storyId: id, genre: g })),
-      })
-    }
+    await prisma.$transaction([
+      prisma.storyGenre.deleteMany({ where: { storyId: id } }),
+      ...(genres.length > 0
+        ? [prisma.storyGenre.createMany({ data: genres.map((g) => ({ storyId: id, genre: g })) })]
+        : []),
+    ])
   }
 
   const story = await prisma.story.update({

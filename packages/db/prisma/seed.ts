@@ -16,6 +16,7 @@ interface StorySeed {
   isAdult: boolean
   chapters: number   // how many chapters to generate
   pagesPerChapter: number
+  coverImage?: string
 }
 
 const STORIES: StorySeed[] = [
@@ -525,6 +526,7 @@ async function main() {
         description: s.description,
         status: s.status,
         isAdult: s.isAdult,
+        coverImage: s.coverImage ?? `https://picsum.photos/seed/${s.slug}/300/450`,
         genres: { create: s.genres.map((g) => ({ genre: g })) },
       },
     })

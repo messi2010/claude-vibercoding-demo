@@ -15,6 +15,7 @@ const PORT = parseInt(process.env.PORT || '4000', 10)
 
 app.use(cors({ origin: process.env.ALLOWED_ORIGIN || 'http://localhost:3000' }))
 app.use(express.json())
+app.use('/uploads', express.static('uploads'))
 
 app.get('/health', (_req, res) => res.json({ status: 'ok' }))
 

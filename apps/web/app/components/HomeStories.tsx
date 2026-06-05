@@ -20,14 +20,25 @@ interface HomeStoriesProps {
 
 export function HomeStories({ stories, progress }: HomeStoriesProps) {
   const [activeGenre, setActiveGenre] = useState<string>('all')
+  const [search, setSearch] = useState('')
 
-  const filtered =
-    activeGenre === 'all'
-      ? stories
-      : stories.filter((s) => s.genres.includes(activeGenre))
+  const filtered = stories.filter((s) => {
+    const matchesGenre = activeGenre === 'all' || s.genres.includes(activeGenre)
+    const matchesSearch = search === '' || s.title.toLowerCase().includes(search.toLowerCase())
+    return matchesGenre && matchesSearch
+  })
 
   return (
     <>
+      {/* Search */}
+      <input
+        type="search"
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        placeholder="Tìm kiếm truyện..."
+        className="w-full bg-surface border border-deep rounded-lg px-4 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-accent text-sm mb-4"
+      />
+
       {/* Genre filter chips */}
       <div className="flex gap-2 overflow-x-auto pb-2 mb-6 scrollbar-none">
         <button

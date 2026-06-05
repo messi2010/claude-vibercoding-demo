@@ -68,6 +68,10 @@ export default async function StoryPage({ params }: StoryPageProps) {
     }
   }
 
+  const currentChapterNum = currentProgress
+    ? (story.chapters.find((c) => c.id === currentProgress!.chapterId)?.number ?? null)
+    : null
+
   return (
     <>
       <Navbar />
@@ -146,7 +150,7 @@ export default async function StoryPage({ params }: StoryPageProps) {
                     href={`/stories/${story.slug}/chapters/${resumeChapter.number}`}
                     className="bg-deep border border-accent text-accent px-6 py-3 rounded-lg font-semibold hover:bg-accent hover:text-white transition-colors"
                   >
-                    Đọc tiếp Ch.{resumeChapter.number} Trang {currentProgress.pageNumber}
+                    Đọc tiếp Ch.{resumeChapter.number}
                   </Link>
                 ) : null
               })()}
@@ -159,18 +163,26 @@ export default async function StoryPage({ params }: StoryPageProps) {
                   Danh sách chương ({story.chapters.length})
                 </h2>
                 <div className="bg-surface rounded-xl border border-deep divide-y divide-deep max-h-80 overflow-y-auto">
-                  {story.chapters.map((ch) => (
-                    <Link
-                      key={ch.id}
-                      href={`/stories/${story.slug}/chapters/${ch.number}`}
-                      className="flex items-center gap-3 px-4 py-3 hover:bg-deep transition-colors"
-                    >
-                      <span className="text-gray-500 text-sm w-12 shrink-0">Ch.{ch.number}</span>
-                      <span className="text-gray-300 text-sm hover:text-white">
-                        {ch.title ?? `Chương ${ch.number}`}
-                      </span>
-                    </Link>
-                  ))}
+                  {story.chapters.map((ch) => {
+                    const isCurrent = ch.id === currentProgress?.chapterId
+                    const isRead = currentChapterNum !== null && ch.number < currentChapterNum
+                    return (
+                      <Link
+                        key={ch.id}
+                        href={`/stories/${story.slug}/chapters/${ch.number}`}
+                        className={`flex items-center gap-3 px-4 py-3 hover:bg-deep transition-colors ${isCurrent ? 'bg-deep' : ''}`}
+                      >
+                        <span className={`text-sm w-12 shrink-0 ${isCurrent ? 'text-accent font-semibold' : 'text-gray-500'}`}>
+                          Ch.{ch.number}
+                        </span>
+                        <span className={`text-sm flex-1 ${isCurrent ? 'text-accent font-semibold' : 'text-gray-300'}`}>
+                          {ch.title ?? `Chương ${ch.number}`}
+                        </span>
+                        {isRead && <span className="text-green-500 text-xs shrink-0">✓</span>}
+                        {isCurrent && <span className="text-accent text-xs shrink-0">●</span>}
+                      </Link>
+                    )
+                  })}
                 </div>
               </div>
             )}

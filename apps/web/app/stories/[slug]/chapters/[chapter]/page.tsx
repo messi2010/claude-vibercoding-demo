@@ -24,6 +24,21 @@ interface ChapterPageProps {
   }
 }
 
+export async function generateMetadata({ params }: ChapterPageProps) {
+  const chapterNum = parseInt(params.chapter, 10)
+  if (isNaN(chapterNum)) return {}
+  try {
+    const [story, chapterData] = await Promise.all([
+      apiCall<StoryWithChapters>(`/stories/${params.slug}`),
+      apiCall<ChapterWithPages>(`/stories/${params.slug}/chapters/${chapterNum}`),
+    ])
+    const suffix = chapterData.title ? ` – ${chapterData.title}` : ''
+    return { title: `Ch.${chapterNum}${suffix} | ${story.title} | TruyệnHay` }
+  } catch {
+    return {}
+  }
+}
+
 export default async function ChapterPage({ params }: ChapterPageProps) {
   const session = await getSession()
   const chapterNum = parseInt(params.chapter, 10)

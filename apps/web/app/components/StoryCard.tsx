@@ -75,6 +75,9 @@ export function StoryCard({ story }: StoryCardProps) {
               </span>
             ))}
           </div>
+          {story.latestChapterNumber != null && (
+            <p className="text-xs text-gray-500 mt-1">Ch.{story.latestChapterNumber}</p>
+          )}
         </div>
       </div>
     </Link>

@@ -17,6 +17,9 @@ progressRouter.get('/', async (req: Request, res: Response): Promise<void> => {
       story: {
         select: { id: true, title: true, slug: true, coverImage: true },
       },
+      chapter: {
+        select: { number: true },
+      },
     },
     orderBy: { updatedAt: 'desc' },
     take: 20,

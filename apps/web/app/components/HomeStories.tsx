@@ -55,18 +55,25 @@ export function HomeStories({ stories, progress }: HomeStoriesProps) {
         ))}
       </div>
 
-      <FeaturedGrid stories={filtered} />
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
-          <RecentUpdates stories={filtered} />
+      {filtered.length === 0 ? (
+        <div className="text-center py-16 text-gray-500">
+          Chưa có truyện thể loại này
         </div>
-        {progress && progress.length > 0 && (
-          <div>
-            <ContinueReading progress={progress} />
+      ) : (
+        <>
+          <FeaturedGrid stories={filtered} />
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2">
+              <RecentUpdates stories={filtered} />
+            </div>
+            {progress && progress.length > 0 && (
+              <div>
+                <ContinueReading progress={progress} />
+              </div>
+            )}
           </div>
-        )}
-      </div>
+        </>
+      )}
     </>
   )
 }

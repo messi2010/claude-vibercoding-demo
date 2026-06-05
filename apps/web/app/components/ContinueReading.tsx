@@ -17,7 +17,7 @@ export function ContinueReading({ progress }: ContinueReadingProps) {
         {progress.map((item) => (
           <Link
             key={item.id}
-            href={`/stories/${item.story?.slug ?? item.storyId}/chapters/${item.chapterId}/pages/${item.pageNumber}`}
+            href={`/stories/${item.story?.slug ?? item.storyId}/chapters/${item.chapter?.number ?? 1}`}
             className="flex-shrink-0 w-28 group"
           >
             <div className="relative w-28 h-40 bg-deep rounded-lg overflow-hidden">
@@ -36,7 +36,7 @@ export function ContinueReading({ progress }: ContinueReadingProps) {
             <p className="text-xs text-gray-300 mt-1 line-clamp-2 group-hover:text-accent transition-colors">
               {item.story?.title ?? 'Truyện'}
             </p>
-            <p className="text-xs text-gray-500">Trang {item.pageNumber}</p>
+            <p className="text-xs text-gray-500">Ch.{item.chapter?.number ?? '?'}</p>
           </Link>
         ))}
       </div>

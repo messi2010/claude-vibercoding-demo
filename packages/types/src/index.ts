@@ -69,6 +69,7 @@ export interface ReadingProgress {
   pageNumber: number
   updatedAt: Date
   story?: Pick<StoryResponse, 'id' | 'title' | 'slug' | 'coverImage'>
+  chapter?: { number: number }
 }
 
 // API response wrapper

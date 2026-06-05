@@ -133,6 +133,35 @@ export function ReadingScrollView({
   const prevChapter = chapters.find((c) => c.number === chapter.number - 1) ?? null
   const nextChapter = chapters.find((c) => c.number === chapter.number + 1) ?? null
 
+  // Keyboard navigation
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return
+      if (e.key === 'ArrowLeft' && prevChapter) router.push(`/stories/${slug}/chapters/${prevChapter.number}`)
+      if (e.key === 'ArrowRight' && nextChapter) router.push(`/stories/${slug}/chapters/${nextChapter.number}`)
+    }
+    window.addEventListener('keydown', handleKey)
+    return () => window.removeEventListener('keydown', handleKey)
+  }, [router, slug, prevChapter, nextChapter])
+
+  // Swipe navigation
+  useEffect(() => {
+    let touchStartX = 0
+    const onStart = (e: TouchEvent) => { touchStartX = e.touches[0].clientX }
+    const onEnd = (e: TouchEvent) => {
+      const dx = e.changedTouches[0].clientX - touchStartX
+      if (Math.abs(dx) < 60) return
+      if (dx > 0 && prevChapter) router.push(`/stories/${slug}/chapters/${prevChapter.number}`)
+      if (dx < 0 && nextChapter) router.push(`/stories/${slug}/chapters/${nextChapter.number}`)
+    }
+    window.addEventListener('touchstart', onStart, { passive: true })
+    window.addEventListener('touchend', onEnd, { passive: true })
+    return () => {
+      window.removeEventListener('touchstart', onStart)
+      window.removeEventListener('touchend', onEnd)
+    }
+  }, [router, slug, prevChapter, nextChapter])
+
   const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' })
 
   return (

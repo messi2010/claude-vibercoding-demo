@@ -89,44 +89,45 @@ export function ReadingView({ story, chapter, page, chapters, slug, session }: R
     <div className="min-h-screen bg-background flex flex-col">
       {/* TopBar */}
       <header className="bg-surface border-b border-deep sticky top-0 z-40">
-        <div className="max-w-3xl mx-auto px-4 h-14 flex items-center gap-4">
-          <Link href="/" className="text-accent font-bold text-lg shrink-0">
+        <div className="max-w-3xl mx-auto px-3 h-12 flex items-center gap-2">
+          <Link href="/" className="text-accent font-bold text-base shrink-0 min-w-[36px] text-center">
             📖
           </Link>
-          <nav className="flex items-center gap-1 text-sm text-gray-400 flex-1 min-w-0">
-            <Link href={`/stories/${slug}`} className="hover:text-white truncate">
+          <nav className="flex items-center gap-1 text-xs text-gray-400 flex-1 min-w-0">
+            <Link href={`/stories/${slug}`} className="hover:text-white truncate hidden sm:block">
               {story.title}
             </Link>
-            <span className="mx-1">›</span>
-            <span className="text-gray-300 shrink-0">
-              Ch.{chapter.number}
-              {chapter.title ? ` – ${chapter.title}` : ''}
+            <span className="mx-1 hidden sm:block">›</span>
+            <span className="text-gray-300 truncate">
+              Ch.{chapter.number}{chapter.title ? ` – ${chapter.title}` : ''}
             </span>
           </nav>
 
-          {/* Font size controls */}
-          <div className="flex items-center gap-1 shrink-0">
-            {(['small', 'medium', 'large'] as FontSize[]).map((sz) => (
+          {/* Font size controls — visible sm+ */}
+          <div className="hidden sm:flex items-center gap-1 shrink-0">
+            {([['small', 'a'], ['medium', 'A'], ['large', 'A']] as [FontSize, string][]).map(([sz, label]) => (
               <button
                 key={sz}
                 onClick={() => updateFontSize(sz)}
-                className={`px-2 py-1 text-xs rounded ${
+                title={sz}
+                className={`w-7 h-7 flex items-center justify-center rounded leading-none ${
+                  sz === 'small' ? 'text-xs' : sz === 'medium' ? 'text-sm' : 'text-base'
+                } ${
                   fontSize === sz
                     ? 'bg-accent text-white'
                     : 'bg-deep text-gray-400 hover:text-white'
                 }`}
               >
-                {sz === 'small' ? 'A' : sz === 'medium' ? 'A' : 'A'}
-                <span className="sr-only">{sz}</span>
+                {label}
               </button>
             ))}
           </div>
 
-          {/* Sidebar toggle (mobile) */}
+          {/* Sidebar toggle — always visible */}
           <button
             onClick={() => setSidebarOpen((v) => !v)}
-            className="lg:hidden text-gray-400 hover:text-white"
-            aria-label="Toggle chapter list"
+            className="min-w-[36px] min-h-[36px] flex items-center justify-center text-gray-400 hover:text-white rounded hover:bg-deep lg:hidden"
+            aria-label="Danh sách chương"
           >
             ☰
           </button>
@@ -190,48 +191,49 @@ export function ReadingView({ story, chapter, page, chapters, slug, session }: R
 
       {/* BottomBar */}
       <footer className="bg-surface border-t border-deep sticky bottom-0 z-40">
-        <div className="max-w-3xl mx-auto px-4 h-14 flex items-center gap-3">
+        <div className="max-w-3xl mx-auto px-3 py-2 flex items-center gap-2">
+          {/* Prev */}
           {prevUrl ? (
             <button
               onClick={() => router.push(prevUrl)}
-              className="bg-deep text-gray-300 hover:text-white px-3 py-1.5 rounded text-sm"
+              className="min-w-[44px] min-h-[44px] flex items-center justify-center gap-1 bg-deep text-gray-300 hover:text-white px-3 rounded text-sm active:scale-95 transition-transform"
             >
-              ← Trang trước
+              <span>←</span>
+              <span className="hidden sm:inline">Trước</span>
             </button>
           ) : (
-            <span className="text-gray-600 text-sm px-3">← Trang trước</span>
+            <div className="min-w-[44px] min-h-[44px]" />
           )}
 
+          {/* Progress center */}
           <div className="flex-1 text-center">
-            <span className="text-gray-400 text-sm">
-              {page.number} / {page.totalPages} tổng
-            </span>
-            <div className="w-full h-1 bg-deep rounded mt-1">
+            <div className="flex items-center justify-center gap-2 text-xs text-gray-400 mb-1">
+              <span>{page.number} / {page.totalPages}</span>
+              {session && saveStatus === 'saved' && <span className="text-green-500">✓</span>}
+              {session && saveStatus === 'saving' && <span className="text-gray-500">...</span>}
+              {session && saveStatus === 'error' && <span className="text-red-500">✗</span>}
+            </div>
+            <div className="w-full h-1.5 bg-deep rounded-full">
               <div
-                className="h-1 bg-accent rounded transition-all"
+                className="h-1.5 bg-accent rounded-full transition-all duration-300"
                 style={{ width: `${progressPercent}%` }}
               />
             </div>
           </div>
 
+          {/* Next */}
           {nextUrl ? (
             <button
               onClick={() => router.push(nextUrl)}
-              className="bg-accent text-white px-3 py-1.5 rounded text-sm hover:opacity-90"
+              className="min-w-[44px] min-h-[44px] flex items-center justify-center gap-1 bg-accent text-white px-3 rounded text-sm hover:opacity-90 active:scale-95 transition-transform"
             >
-              Trang sau →
+              <span className="hidden sm:inline">Tiếp</span>
+              <span>→</span>
             </button>
           ) : (
-            <span className="text-gray-600 text-sm px-3">Trang sau →</span>
-          )}
-
-          {/* Save status */}
-          {session && (
-            <span className="text-xs text-gray-500 shrink-0">
-              {saveStatus === 'saving' && '💾 Đang lưu...'}
-              {saveStatus === 'saved' && '✓ Đã lưu'}
-              {saveStatus === 'error' && '✗ Lỗi'}
-            </span>
+            <div className="min-w-[44px] min-h-[44px] flex items-center justify-center text-gray-600 text-sm">
+              Hết
+            </div>
           )}
         </div>
       </footer>

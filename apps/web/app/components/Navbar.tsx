@@ -52,8 +52,8 @@ export function Navbar() {
         </div>
 
         {/* Search */}
-        <Link href="/search" className="text-gray-300 hover:text-white text-sm">
-          🔍 Tìm kiếm
+        <Link href="/genres/horror" className="text-gray-300 hover:text-white text-sm hidden sm:block">
+          Thể loại
         </Link>
 
         {/* Spacer */}

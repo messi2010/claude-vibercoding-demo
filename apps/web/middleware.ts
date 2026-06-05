@@ -6,14 +6,17 @@ export default withAuth(
     const token = req.nextauth.token
     const path = req.nextUrl.pathname
 
+    const isPublicRoute =
+      path === '/' ||
+      path.startsWith('/stories') ||
+      path.startsWith('/genres') ||
+      path.startsWith('/auth') ||
+      path.startsWith('/api/') ||
+      path.startsWith('/uploads')
+
     // If logged in but DOB not submitted, force to complete-profile
-    // (except the complete-profile page itself and auth routes)
-    if (
-      token &&
-      !token.dobSubmitted &&
-      !path.startsWith('/auth/complete-profile') &&
-      !path.startsWith('/api/')
-    ) {
+    // Only redirect from non-public (protected) routes to avoid redirect loops on homepage
+    if (token && !token.dobSubmitted && !isPublicRoute) {
       return NextResponse.redirect(new URL('/auth/complete-profile', req.url))
     }
 

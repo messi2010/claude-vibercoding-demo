@@ -23,12 +23,12 @@ export default function LoginPage() {
       })
       if (result?.error) {
         setError('Email hoặc mật khẩu không đúng.')
+        setLoading(false)
       } else {
-        router.push('/')
+        window.location.href = '/'
       }
     } catch {
       setError('Đã có lỗi xảy ra. Vui lòng thử lại.')
-    } finally {
       setLoading(false)
     }
   }

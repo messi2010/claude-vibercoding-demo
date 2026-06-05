@@ -15,17 +15,19 @@ export function Navbar() {
   const { data: session } = useSession()
   const [genreOpen, setGenreOpen] = useState(false)
   const [userOpen, setUserOpen] = useState(false)
+  const [mobileOpen, setMobileOpen] = useState(false)
 
   return (
     <nav className="bg-surface border-b border-deep sticky top-0 z-50">
+      {/* Main bar */}
       <div className="max-w-7xl mx-auto px-4 h-14 flex items-center gap-6">
         {/* Logo */}
         <Link href="/" className="text-xl font-bold text-white shrink-0">
           📖 TruyệnHay
         </Link>
 
-        {/* Genre Dropdown */}
-        <div className="relative">
+        {/* Desktop: Genre Dropdown */}
+        <div className="relative hidden md:block">
           <button
             onClick={() => setGenreOpen((v) => !v)}
             className="text-gray-300 hover:text-white flex items-center gap-1 text-sm"
@@ -51,62 +53,122 @@ export function Navbar() {
           )}
         </div>
 
-        {/* Search */}
-        <Link href="/genres/horror" className="text-gray-300 hover:text-white text-sm hidden sm:block">
-          Thể loại
-        </Link>
-
         {/* Spacer */}
         <div className="flex-1" />
 
-        {/* Auth */}
-        {session ? (
-          <div className="relative">
-            <button
-              onClick={() => setUserOpen((v) => !v)}
-              className="flex items-center gap-2 text-sm text-gray-300 hover:text-white"
+        {/* Desktop: Auth */}
+        <div className="hidden md:flex items-center">
+          {session ? (
+            <div className="relative">
+              <button
+                onClick={() => setUserOpen((v) => !v)}
+                className="flex items-center gap-2 text-sm text-gray-300 hover:text-white"
+              >
+                <div className="w-7 h-7 rounded-full bg-accent flex items-center justify-center text-white text-xs font-bold">
+                  {(session.user?.name ?? session.user?.email ?? 'U')[0].toUpperCase()}
+                </div>
+                <span>{session.user?.name ?? session.user?.email}</span>
+              </button>
+              {userOpen && (
+                <div className="absolute right-0 top-full mt-1 bg-surface border border-deep rounded-lg shadow-lg py-1 w-44 z-50">
+                  <Link
+                    href="/profile"
+                    className="block px-4 py-2 text-sm text-gray-300 hover:bg-deep hover:text-white"
+                    onClick={() => setUserOpen(false)}
+                  >
+                    Trang cá nhân
+                  </Link>
+                  {(session.user as { role?: string })?.role === 'ADMIN' && (
+                    <Link
+                      href="/admin"
+                      className="block px-4 py-2 text-sm text-gray-300 hover:bg-deep hover:text-white"
+                      onClick={() => setUserOpen(false)}
+                    >
+                      Quản trị
+                    </Link>
+                  )}
+                  <button
+                    onClick={() => signOut({ callbackUrl: '/' })}
+                    className="block w-full text-left px-4 py-2 text-sm text-accent hover:bg-deep"
+                  >
+                    Đăng xuất
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <Link
+              href="/auth/login"
+              className="bg-accent text-white px-4 py-1.5 rounded-lg text-sm hover:opacity-90 transition-opacity"
             >
-              <div className="w-7 h-7 rounded-full bg-accent flex items-center justify-center text-white text-xs font-bold">
-                {(session.user?.name ?? session.user?.email ?? 'U')[0].toUpperCase()}
-              </div>
-              <span className="hidden sm:block">{session.user?.name ?? session.user?.email}</span>
-            </button>
-            {userOpen && (
-              <div className="absolute right-0 top-full mt-1 bg-surface border border-deep rounded-lg shadow-lg py-1 w-44 z-50">
+              Đăng nhập
+            </Link>
+          )}
+        </div>
+
+        {/* Mobile: Hamburger */}
+        <button
+          className="md:hidden ml-auto min-h-[44px] min-w-[44px] flex items-center justify-center text-gray-300 hover:text-white"
+          onClick={() => setMobileOpen((v) => !v)}
+          aria-label="Menu"
+        >
+          {mobileOpen ? '✕' : '☰'}
+        </button>
+      </div>
+
+      {/* Mobile menu panel */}
+      {mobileOpen && (
+        <div className="md:hidden bg-surface border-t border-deep px-4 py-2 flex flex-col">
+          {GENRES.map((g) => (
+            <Link
+              key={g.value}
+              href={`/genres/${g.value}`}
+              className="flex items-center min-h-[44px] px-2 text-gray-300 hover:text-white text-sm"
+              onClick={() => setMobileOpen(false)}
+            >
+              {g.label}
+            </Link>
+          ))}
+          <div className="border-t border-deep mt-1 pt-1">
+            {session ? (
+              <>
                 <Link
                   href="/profile"
-                  className="block px-4 py-2 text-sm text-gray-300 hover:bg-deep hover:text-white"
-                  onClick={() => setUserOpen(false)}
+                  className="flex items-center min-h-[44px] px-2 text-gray-300 hover:text-white text-sm"
+                  onClick={() => setMobileOpen(false)}
                 >
                   Trang cá nhân
                 </Link>
                 {(session.user as { role?: string })?.role === 'ADMIN' && (
                   <Link
                     href="/admin"
-                    className="block px-4 py-2 text-sm text-gray-300 hover:bg-deep hover:text-white"
-                    onClick={() => setUserOpen(false)}
+                    className="flex items-center min-h-[44px] px-2 text-gray-300 hover:text-white text-sm"
+                    onClick={() => setMobileOpen(false)}
                   >
                     Quản trị
                   </Link>
                 )}
                 <button
                   onClick={() => signOut({ callbackUrl: '/' })}
-                  className="block w-full text-left px-4 py-2 text-sm text-accent hover:bg-deep"
+                  className="flex items-center min-h-[44px] px-2 w-full text-left text-accent text-sm"
                 >
                   Đăng xuất
                 </button>
+              </>
+            ) : (
+              <div className="py-2">
+                <Link
+                  href="/auth/login"
+                  className="block text-center bg-accent text-white px-4 py-2 rounded-lg text-sm font-semibold"
+                  onClick={() => setMobileOpen(false)}
+                >
+                  Đăng nhập
+                </Link>
               </div>
             )}
           </div>
-        ) : (
-          <Link
-            href="/auth/login"
-            className="bg-accent text-white px-4 py-1.5 rounded-lg text-sm hover:opacity-90 transition-opacity"
-          >
-            Đăng nhập
-          </Link>
-        )}
-      </div>
+        </div>
+      )}
     </nav>
   )
 }

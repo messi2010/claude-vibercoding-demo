@@ -43,6 +43,7 @@ export interface Story {
 // Story as returned from API (with genres flattened to string[])
 export interface StoryResponse extends Story {
   genres: string[]
+  latestChapterNumber?: number | null
 }
 
 export interface Chapter {

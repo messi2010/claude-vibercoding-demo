@@ -49,7 +49,7 @@ export default async function StoryPage({ params }: StoryPageProps) {
       <>
         <Navbar />
         <main className="max-w-7xl mx-auto px-4 py-8">
-          <AgeGate />
+          <AgeGate loggedIn={!!session} />
         </main>
       </>
     )
@@ -139,14 +139,17 @@ export default async function StoryPage({ params }: StoryPageProps) {
                   Đọc ngay
                 </Link>
               )}
-              {currentProgress && (
-                <Link
-                  href={`/stories/${story.slug}/chapters/${currentProgress.chapterId}/pages/${currentProgress.pageNumber}`}
-                  className="bg-deep border border-accent text-accent px-6 py-3 rounded-lg font-semibold hover:bg-accent hover:text-white transition-colors"
-                >
-                  Đọc tiếp Trang {currentProgress.pageNumber}
-                </Link>
-              )}
+              {currentProgress && (() => {
+                const resumeChapter = story.chapters.find(c => c.id === currentProgress.chapterId)
+                return resumeChapter ? (
+                  <Link
+                    href={`/stories/${story.slug}/chapters/${resumeChapter.number}/pages/${currentProgress.pageNumber}`}
+                    className="bg-deep border border-accent text-accent px-6 py-3 rounded-lg font-semibold hover:bg-accent hover:text-white transition-colors"
+                  >
+                    Đọc tiếp Ch.{resumeChapter.number} Trang {currentProgress.pageNumber}
+                  </Link>
+                ) : null
+              })()}
             </div>
 
             {/* Chapter List */}

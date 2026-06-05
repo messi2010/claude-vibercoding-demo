@@ -25,7 +25,10 @@ storiesRouter.get('/', async (req: Request, res: Response): Promise<void> => {
   const [stories, total] = await Promise.all([
     prisma.story.findMany({
       where,
-      include: { genres: true },
+      include: {
+        genres: true,
+        chapters: { orderBy: { number: 'desc' }, take: 1, select: { number: true } },
+      },
       orderBy: { updatedAt: 'desc' },
       skip,
       take: pageSizeNum,
@@ -36,6 +39,7 @@ storiesRouter.get('/', async (req: Request, res: Response): Promise<void> => {
   const items: StoryResponse[] = stories.map((s) => ({
     ...s,
     genres: s.genres.map((g) => g.genre),
+    latestChapterNumber: s.chapters[0]?.number ?? null,
   }))
 
   const result: PaginatedResponse<StoryResponse> = {

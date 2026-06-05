@@ -7,6 +7,7 @@ import type { StoryResponse, Chapter, ReadingProgress } from '@truyen/types'
 import { Navbar } from '../../components/Navbar'
 import { AgeGate } from '../../components/AgeGate'
 import { ChapterList } from './ChapterList'
+import { ExpandableDescription } from './ExpandableDescription'
 
 interface StoryWithChapters extends StoryResponse {
   chapters: Chapter[]
@@ -138,9 +139,7 @@ export default async function StoryPage({ params }: StoryPageProps) {
 
             {/* Description */}
             {story.description && (
-              <p className="text-gray-300 leading-relaxed mb-6 whitespace-pre-wrap">
-                {story.description}
-              </p>
+              <ExpandableDescription text={story.description} />
             )}
 
             {/* CTA Buttons */}

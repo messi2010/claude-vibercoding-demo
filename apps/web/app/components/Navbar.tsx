@@ -1,7 +1,7 @@
 'use client'
 import Link from 'next/link'
 import { useSession, signOut } from 'next-auth/react'
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 
 const GENRES = [
   { value: 'horror', label: 'Kinh Dị' },
@@ -16,6 +16,17 @@ export function Navbar() {
   const [genreOpen, setGenreOpen] = useState(false)
   const [userOpen, setUserOpen] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
+  const genreRef = useRef<HTMLDivElement>(null)
+  const userRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (genreRef.current && !genreRef.current.contains(e.target as Node)) setGenreOpen(false)
+      if (userRef.current && !userRef.current.contains(e.target as Node)) setUserOpen(false)
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [])
 
   return (
     <nav className="bg-surface border-b border-deep sticky top-0 z-50">
@@ -27,7 +38,7 @@ export function Navbar() {
         </Link>
 
         {/* Desktop: Genre Dropdown */}
-        <div className="relative hidden md:block">
+        <div className="relative hidden md:block" ref={genreRef}>
           <button
             onClick={() => setGenreOpen((v) => !v)}
             className="text-gray-300 hover:text-white flex items-center gap-1 text-sm"
@@ -59,7 +70,7 @@ export function Navbar() {
         {/* Desktop: Auth */}
         <div className="hidden md:flex items-center">
           {session ? (
-            <div className="relative">
+            <div className="relative" ref={userRef}>
               <button
                 onClick={() => setUserOpen((v) => !v)}
                 className="flex items-center gap-2 text-sm text-gray-300 hover:text-white"

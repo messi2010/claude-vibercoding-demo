@@ -259,6 +259,33 @@ export function ReadingScrollView({
               ✕
             </button>
           </div>
+          <div className="p-2 border-b border-deep">
+            <form
+              onSubmit={(e) => {
+                e.preventDefault()
+                const val = parseInt((e.currentTarget.elements.namedItem('jump') as HTMLInputElement).value, 10)
+                if (!isNaN(val) && chapters.some((c) => c.number === val)) {
+                  router.push(`/stories/${slug}/chapters/${val}`)
+                  setSidebarOpen(false)
+                }
+              }}
+              className="flex gap-1"
+            >
+              <input
+                name="jump"
+                type="number"
+                min={1}
+                placeholder="Tới chương..."
+                className="flex-1 bg-deep border border-deep rounded px-2 py-1 text-white text-xs placeholder-gray-500 focus:outline-none focus:border-accent"
+              />
+              <button
+                type="submit"
+                className="bg-accent text-white text-xs px-2 py-1 rounded hover:opacity-90"
+              >
+                →
+              </button>
+            </form>
+          </div>
           <div className="overflow-y-auto h-full pb-20">
             {chapters.map((ch) => (
               <Link

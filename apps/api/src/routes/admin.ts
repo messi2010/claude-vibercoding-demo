@@ -1,3 +1,4 @@
+import crypto from 'crypto'
 import path from 'path'
 import { Router, IRouter, Request, Response } from 'express'
 import multer from 'multer'
@@ -13,11 +14,18 @@ adminRouter.use(requireAuth, adminOnly)
 // Multer: disk storage under apps/api/uploads/
 const uploadsDir = path.resolve(__dirname, '../../uploads')
 
+const ALLOWED_IMAGE_TYPES = new Set(['image/png', 'image/jpeg', 'image/webp', 'image/gif'])
+const ALLOWED_IMAGE_EXTS = new Set(['.png', '.jpg', '.jpeg', '.webp', '.gif'])
+
 const storage = multer.diskStorage({
   destination: (_req, _file, cb) => cb(null, uploadsDir),
   filename: (_req, file, cb) => {
-    const ext = path.extname(file.originalname)
-    cb(null, `${Date.now()}-${Math.random().toString(36).slice(2)}${ext}`)
+    const ext = path.extname(file.originalname).toLowerCase()
+    if (!ALLOWED_IMAGE_EXTS.has(ext)) {
+      cb(new Error('Invalid file extension'), '')
+      return
+    }
+    cb(null, `${Date.now()}-${crypto.randomBytes(16).toString('hex')}${ext}`)
   },
 })
 
@@ -25,7 +33,7 @@ const upload = multer({
   storage,
   limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB
   fileFilter: (_req, file, cb) => {
-    if (file.mimetype.startsWith('image/')) {
+    if (ALLOWED_IMAGE_TYPES.has(file.mimetype)) {
       cb(null, true)
     } else {
       cb(new Error('Only image files are allowed'))

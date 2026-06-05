@@ -17,7 +17,13 @@ const PORT = parseInt(process.env.PORT || '4000', 10)
 
 app.use(cors({ origin: process.env.ALLOWED_ORIGIN || 'http://localhost:3000' }))
 app.use(express.json())
-app.use('/uploads', express.static(path.resolve(__dirname, '../uploads')))
+app.use('/uploads', express.static(path.resolve(__dirname, '../uploads'), {
+  setHeaders: (res) => {
+    res.setHeader('Content-Disposition', 'attachment')
+    res.setHeader('Content-Security-Policy', "default-src 'none'; sandbox")
+    res.setHeader('X-Content-Type-Options', 'nosniff')
+  },
+}))
 
 app.get('/health', (_req, res) => res.json({ status: 'ok' }))
 
@@ -28,7 +34,8 @@ app.use('/admin', adminRouter)
 
 // Multer error handler (file too large, wrong type)
 app.use((err: Error, _req: express.Request, res: express.Response, next: express.NextFunction): void => {
-  if (err instanceof multer.MulterError || err.message === 'Only image files are allowed') {
+  const uploadErrors = ['Only image files are allowed', 'Invalid file extension']
+  if (err instanceof multer.MulterError || uploadErrors.includes(err.message)) {
     res.status(400).json({ error: err.message })
     return
   }

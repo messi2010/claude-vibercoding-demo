@@ -133,7 +133,7 @@ export default async function StoryPage({ params }: StoryPageProps) {
             <div className="flex flex-wrap gap-3 mb-8">
               {story.chapters.length > 0 && (
                 <Link
-                  href={`/stories/${story.slug}/chapters/${story.chapters[0].number}/pages/1`}
+                  href={`/stories/${story.slug}/chapters/${story.chapters[0].number}`}
                   className="bg-accent text-white px-6 py-3 rounded-lg font-semibold hover:opacity-90 transition-opacity"
                 >
                   Đọc ngay
@@ -143,7 +143,7 @@ export default async function StoryPage({ params }: StoryPageProps) {
                 const resumeChapter = story.chapters.find(c => c.id === currentProgress.chapterId)
                 return resumeChapter ? (
                   <Link
-                    href={`/stories/${story.slug}/chapters/${resumeChapter.number}/pages/${currentProgress.pageNumber}`}
+                    href={`/stories/${story.slug}/chapters/${resumeChapter.number}`}
                     className="bg-deep border border-accent text-accent px-6 py-3 rounded-lg font-semibold hover:bg-accent hover:text-white transition-colors"
                   >
                     Đọc tiếp Ch.{resumeChapter.number} Trang {currentProgress.pageNumber}

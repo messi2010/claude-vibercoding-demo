@@ -162,7 +162,7 @@ export default async function StoryPage({ params }: StoryPageProps) {
                   {story.chapters.map((ch) => (
                     <Link
                       key={ch.id}
-                      href={`/stories/${story.slug}/chapters/${ch.number}/pages/1`}
+                      href={`/stories/${story.slug}/chapters/${ch.number}`}
                       className="flex items-center gap-3 px-4 py-3 hover:bg-deep transition-colors"
                     >
                       <span className="text-gray-500 text-sm w-12 shrink-0">Ch.{ch.number}</span>

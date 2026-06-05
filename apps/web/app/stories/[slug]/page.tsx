@@ -149,7 +149,7 @@ export default async function StoryPage({ params }: StoryPageProps) {
                   href={`/stories/${story.slug}/chapters/${story.chapters[0].number}`}
                   className="bg-accent text-white px-6 py-3 rounded-lg font-semibold hover:opacity-90 transition-opacity"
                 >
-                  Đọc ngay
+                  {currentProgress ? 'Đọc từ đầu' : 'Đọc ngay'}
                 </Link>
               )}
               {currentProgress && (() => {

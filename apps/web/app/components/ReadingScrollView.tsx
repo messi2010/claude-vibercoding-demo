@@ -43,6 +43,13 @@ export function ReadingScrollView({
   const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const lastScrollYRef = useRef(0)
   const contentRef = useRef<HTMLDivElement>(null)
+  const activeChapterRef = useRef<HTMLAnchorElement>(null)
+
+  useEffect(() => {
+    if (sidebarOpen && activeChapterRef.current) {
+      activeChapterRef.current.scrollIntoView({ block: 'center', behavior: 'smooth' })
+    }
+  }, [sidebarOpen])
 
   useEffect(() => {
     const stored = localStorage.getItem(LS_FONT_KEY) as FontSize | null
@@ -290,6 +297,7 @@ export function ReadingScrollView({
             {chapters.map((ch) => (
               <Link
                 key={ch.id}
+                ref={ch.number === chapter.number ? activeChapterRef : null}
                 href={`/stories/${slug}/chapters/${ch.number}`}
                 onClick={() => setSidebarOpen(false)}
                 className={`block px-4 py-3 text-sm border-b border-deep transition-colors ${

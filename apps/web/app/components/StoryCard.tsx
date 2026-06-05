@@ -27,13 +27,13 @@ export function StoryCard({ story }: StoryCardProps) {
     <Link href={`/stories/${story.slug}`} className="group block">
       <div className="bg-surface rounded-xl overflow-hidden border border-deep hover:border-accent transition-colors">
         {/* Cover */}
-        <div className="relative w-full aspect-[2/3] bg-deep">
+        <div className="relative w-full aspect-[2/3] bg-deep overflow-hidden">
           {story.coverImage ? (
             <Image
               src={story.coverImage}
               alt={story.title}
               fill
-              className="object-cover"
+              className="object-cover transition-transform duration-300 group-hover:scale-105"
               sizes="(max-width: 768px) 50vw, 25vw"
             />
           ) : (

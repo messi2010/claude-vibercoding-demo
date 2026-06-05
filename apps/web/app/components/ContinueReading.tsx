@@ -13,7 +13,7 @@ export function ContinueReading({ progress }: ContinueReadingProps) {
   return (
     <section>
       <h2 className="text-xl font-bold text-white mb-4">Tiếp Tục Đọc</h2>
-      <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+      <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none">
         {progress.map((item) => (
           <Link
             key={item.id}

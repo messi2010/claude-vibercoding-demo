@@ -12,9 +12,19 @@
   },
   "scripts": {
     "build": "tsc",
-    "lint": "echo \"No lint configured\""
+    "lint": "echo \"No lint configured\"",
+    "db:migrate": "prisma migrate dev",
+    "db:generate": "prisma generate",
+    "db:studio": "prisma studio"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.0.0"
   },
   "devDependencies": {
+    "prisma": "^5.0.0",
     "typescript": "^5.4.5"
+  },
+  "prisma": {
+    "schema": "./prisma/schema.prisma"
   }
 }

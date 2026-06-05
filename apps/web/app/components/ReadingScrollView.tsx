@@ -23,6 +23,7 @@ const FONT_CLASSES: Record<FontSize, string> = {
 }
 
 const LS_FONT_KEY = 'reading-font-size'
+const BAR_HIDE_DELAY = 3000
 
 export function ReadingScrollView({
   story,
@@ -36,7 +37,11 @@ export function ReadingScrollView({
   const [fontSize, setFontSize] = useState<FontSize>('medium')
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
+  const [scrollProgress, setScrollProgress] = useState(0)
+  const [barsVisible, setBarsVisible] = useState(true)
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const lastScrollYRef = useRef(0)
   const contentRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -48,6 +53,39 @@ export function ReadingScrollView({
     setFontSize(size)
     localStorage.setItem(LS_FONT_KEY, size)
   }
+
+  const showBars = useCallback(() => {
+    setBarsVisible(true)
+    if (hideTimerRef.current) clearTimeout(hideTimerRef.current)
+    hideTimerRef.current = setTimeout(() => setBarsVisible(false), BAR_HIDE_DELAY)
+  }, [])
+
+  // Scroll listener: progress bar + auto-hide
+  useEffect(() => {
+    const handleScroll = () => {
+      requestAnimationFrame(() => {
+        const scrollY = window.scrollY
+        const maxScroll = document.documentElement.scrollHeight - window.innerHeight
+        setScrollProgress(maxScroll > 0 ? (scrollY / maxScroll) * 100 : 0)
+
+        if (scrollY < lastScrollYRef.current) {
+          // scrolling up — show bars immediately
+          showBars()
+        } else {
+          // scrolling down — reset hide timer
+          if (hideTimerRef.current) clearTimeout(hideTimerRef.current)
+          hideTimerRef.current = setTimeout(() => setBarsVisible(false), BAR_HIDE_DELAY)
+        }
+        lastScrollYRef.current = scrollY
+      })
+    }
+
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => {
+      window.removeEventListener('scroll', handleScroll)
+      if (hideTimerRef.current) clearTimeout(hideTimerRef.current)
+    }
+  }, [showBars])
 
   const saveProgress = useCallback(
     (pageNumber: number) => {
@@ -99,8 +137,18 @@ export function ReadingScrollView({
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
+      {/* Reading progress bar — fixed above everything */}
+      <div
+        className="fixed top-0 left-0 h-0.5 bg-accent z-50 transition-[width] duration-100"
+        style={{ width: `${scrollProgress}%` }}
+      />
+
       {/* TopBar */}
-      <header className="bg-surface border-b border-deep sticky top-0 z-40">
+      <header
+        className={`bg-surface border-b border-deep sticky top-0 z-40 transform transition-transform duration-300 ${
+          barsVisible ? 'translate-y-0' : '-translate-y-full'
+        }`}
+      >
         <div className="max-w-3xl mx-auto px-3 h-12 flex items-center gap-2">
           <Link
             href="/"
@@ -122,7 +170,7 @@ export function ReadingScrollView({
             </span>
           </nav>
 
-          {/* Font size controls — always visible */}
+          {/* Font size controls */}
           <div className="flex items-center gap-1 shrink-0">
             {(
               [
@@ -207,8 +255,12 @@ export function ReadingScrollView({
           />
         )}
 
-        {/* Scrollable content */}
-        <main className="flex-1 max-w-3xl mx-auto px-4 py-8" ref={contentRef}>
+        {/* Scrollable content — tap to show bars */}
+        <main
+          className="flex-1 max-w-3xl mx-auto px-4 py-8"
+          ref={contentRef}
+          onClick={showBars}
+        >
           {pages.map((page, i) => (
             <section key={page.id} data-page={page.number}>
               <div
@@ -224,9 +276,12 @@ export function ReadingScrollView({
       </div>
 
       {/* BottomBar */}
-      <footer className="bg-surface border-t border-deep sticky bottom-0 z-40">
+      <footer
+        className={`bg-surface border-t border-deep sticky bottom-0 z-40 transform transition-transform duration-300 ${
+          barsVisible ? 'translate-y-0' : 'translate-y-full'
+        }`}
+      >
         <div className="max-w-3xl mx-auto px-3 py-2 flex items-center gap-2">
-          {/* Prev chapter */}
           {prevChapter ? (
             <button
               onClick={() =>
@@ -241,7 +296,6 @@ export function ReadingScrollView({
             <div className="min-w-[44px] min-h-[44px]" />
           )}
 
-          {/* Center: save status + scroll to top */}
           <div className="flex-1 flex items-center justify-center gap-3">
             {session && saveStatus === 'saved' && (
               <span className="text-green-500 text-xs">✓ Đã lưu</span>
@@ -260,7 +314,6 @@ export function ReadingScrollView({
             </button>
           </div>
 
-          {/* Next chapter */}
           {nextChapter ? (
             <button
               onClick={() =>

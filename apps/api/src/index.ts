@@ -1,9 +1,10 @@
-import 'dotenv/config'
+import dotenv from 'dotenv'
+import path from 'path'
+dotenv.config({ path: path.resolve(__dirname, '../../../.env') })
 
 if (!process.env.NEXTAUTH_SECRET) throw new Error('NEXTAUTH_SECRET is not set')
 if (!process.env.INTERNAL_API_SECRET) throw new Error('INTERNAL_API_SECRET is not set')
 
-import path from 'path'
 import express, { Application } from 'express'
 import cors from 'cors'
 import multer from 'multer'

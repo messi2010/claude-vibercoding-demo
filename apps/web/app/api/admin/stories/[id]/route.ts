@@ -9,6 +9,18 @@ async function requireAdmin() {
   return session
 }
 
+export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
+  try {
+    const session = await requireAdmin()
+    if (!session) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    const data = await apiCall(`/admin/stories/${params.id}`, { userToken: session.accessToken })
+    return NextResponse.json(data)
+  } catch (err) {
+    console.error('GET /admin/stories/[id] error:', err)
+    return NextResponse.json({ error: 'Failed to fetch story' }, { status: 500 })
+  }
+}
+
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   try {
     const session = await requireAdmin()

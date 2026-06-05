@@ -41,6 +41,46 @@ const upload = multer({
   },
 })
 
+// GET /admin/stories — all stories including adult, with chapter count
+adminRouter.get('/stories', async (_req: Request, res: Response): Promise<void> => {
+  const stories = await prisma.story.findMany({
+    include: {
+      genres: true,
+      chapters: { select: { id: true } },
+    },
+    orderBy: { updatedAt: 'desc' },
+  })
+  res.json(stories.map((s) => ({
+    ...s,
+    genres: s.genres.map((g) => g.genre),
+    chapterCount: s.chapters.length,
+    chapters: undefined,
+  })))
+})
+
+// GET /admin/stories/:id — single story with chapters
+adminRouter.get('/stories/:id', async (req: Request, res: Response): Promise<void> => {
+  const story = await prisma.story.findUnique({
+    where: { id: req.params.id },
+    include: {
+      genres: true,
+      chapters: { orderBy: { number: 'asc' }, include: { pages: { select: { id: true } } } },
+    },
+  })
+  if (!story) { res.status(404).json({ error: 'Story not found' }); return }
+  res.json({ ...story, genres: story.genres.map((g) => g.genre) })
+})
+
+// GET /admin/chapters/:id — chapter with pages
+adminRouter.get('/chapters/:id', async (req: Request, res: Response): Promise<void> => {
+  const chapter = await prisma.chapter.findUnique({
+    where: { id: req.params.id },
+    include: { pages: { orderBy: { number: 'asc' } } },
+  })
+  if (!chapter) { res.status(404).json({ error: 'Chapter not found' }); return }
+  res.json(chapter)
+})
+
 // POST /admin/stories
 adminRouter.post('/stories', async (req: Request, res: Response): Promise<void> => {
   const { title, slug, description, isAdult, status, genres } = req.body as CreateStoryBody & { genres?: string[] }

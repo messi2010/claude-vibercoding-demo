@@ -180,8 +180,9 @@ export function ReadingScrollView({
       >
         <div className="max-w-3xl mx-auto px-3 h-12 flex items-center gap-2">
           <Link
-            href="/"
+            href={`/stories/${slug}`}
             className="text-accent font-bold text-base shrink-0 min-w-[36px] text-center"
+            aria-label={`Quay lại ${story.title}`}
           >
             📖
           </Link>

@@ -89,7 +89,10 @@ export default async function ProfilePage() {
               {progressList.map((progress) => {
                 const story = progress.story
                 if (!story) return null
-                const readLink = `/stories/${story.slug}/chapters/${progress.chapterId}/pages/${progress.pageNumber}`
+                const chapterNum = progress.chapter?.number
+                const readLink = chapterNum
+                  ? `/stories/${story.slug}/chapters/${chapterNum}`
+                  : `/stories/${story.slug}`
                 return (
                   <div
                     key={progress.id}
@@ -116,15 +119,8 @@ export default async function ProfilePage() {
                     <div className="flex-1 min-w-0">
                       <p className="text-white font-medium text-sm truncate">{story.title}</p>
                       <p className="text-gray-400 text-xs mt-0.5">
-                        Trang {progress.pageNumber}
+                        {chapterNum ? `Ch.${chapterNum}` : ''}
                       </p>
-                      {/* Progress bar — rough estimate: pageNumber out of 20 total assumed */}
-                      <div className="mt-2 h-1 bg-deep rounded-full overflow-hidden w-full max-w-48">
-                        <div
-                          className="h-full bg-accent rounded-full"
-                          style={{ width: `${Math.min(100, (progress.pageNumber / 20) * 100)}%` }}
-                        />
-                      </div>
                     </div>
 
                     {/* CTA */}

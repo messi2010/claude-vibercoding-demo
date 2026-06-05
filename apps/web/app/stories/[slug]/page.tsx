@@ -6,6 +6,7 @@ import { apiCall } from '../../../lib/api'
 import type { StoryResponse, Chapter, ReadingProgress } from '@truyen/types'
 import { Navbar } from '../../components/Navbar'
 import { AgeGate } from '../../components/AgeGate'
+import { ChapterList } from './ChapterList'
 
 interface StoryWithChapters extends StoryResponse {
   chapters: Chapter[]
@@ -29,6 +30,15 @@ const GENRE_COLORS: Record<string, string> = {
   martial_arts: 'bg-yellow-900 text-yellow-200',
   romance: 'bg-pink-900 text-pink-200',
   adult: 'bg-red-800 text-red-100',
+}
+
+export async function generateMetadata({ params }: StoryPageProps) {
+  try {
+    const story = await apiCall<StoryWithChapters>(`/stories/${params.slug}`)
+    return { title: `${story.title} | TruyệnHay` }
+  } catch {
+    return {}
+  }
 }
 
 export default async function StoryPage({ params }: StoryPageProps) {
@@ -158,33 +168,12 @@ export default async function StoryPage({ params }: StoryPageProps) {
 
             {/* Chapter List */}
             {story.chapters.length > 0 && (
-              <div>
-                <h2 className="text-lg font-bold text-white mb-3">
-                  Danh sách chương ({story.chapters.length})
-                </h2>
-                <div className="bg-surface rounded-xl border border-deep divide-y divide-deep max-h-80 overflow-y-auto">
-                  {story.chapters.map((ch) => {
-                    const isCurrent = ch.id === currentProgress?.chapterId
-                    const isRead = currentChapterNum !== null && ch.number < currentChapterNum
-                    return (
-                      <Link
-                        key={ch.id}
-                        href={`/stories/${story.slug}/chapters/${ch.number}`}
-                        className={`flex items-center gap-3 px-4 py-3 hover:bg-deep transition-colors ${isCurrent ? 'bg-deep' : ''}`}
-                      >
-                        <span className={`text-sm w-12 shrink-0 ${isCurrent ? 'text-accent font-semibold' : 'text-gray-500'}`}>
-                          Ch.{ch.number}
-                        </span>
-                        <span className={`text-sm flex-1 ${isCurrent ? 'text-accent font-semibold' : 'text-gray-300'}`}>
-                          {ch.title ?? `Chương ${ch.number}`}
-                        </span>
-                        {isRead && <span className="text-green-500 text-xs shrink-0">✓</span>}
-                        {isCurrent && <span className="text-accent text-xs shrink-0">●</span>}
-                      </Link>
-                    )
-                  })}
-                </div>
-              </div>
+              <ChapterList
+                chapters={story.chapters}
+                slug={story.slug}
+                currentChapterId={currentProgress?.chapterId}
+                currentChapterNum={currentChapterNum}
+              />
             )}
           </div>
         </div>

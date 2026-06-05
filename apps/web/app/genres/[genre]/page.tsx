@@ -17,6 +17,11 @@ const GENRES = [
   { value: 'adult', label: '18+' },
 ]
 
+export function generateMetadata({ params }: GenrePageProps) {
+  const label = GENRES.find((g) => g.value === params.genre)?.label ?? params.genre
+  return { title: `Truyện ${label} | TruyệnHay` }
+}
+
 export default async function GenrePage({ params }: GenrePageProps) {
   const session = await getSession()
   const currentGenre = params.genre

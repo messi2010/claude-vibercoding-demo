@@ -30,11 +30,16 @@ export function RecentUpdates({ stories }: RecentUpdatesProps) {
                 {story.title}
               </Link>
               <div className="flex items-center gap-2 mt-0.5">
-                <span className="text-xs text-gray-400">
-                  {story.latestChapterNumber != null
-                    ? `Chương ${story.latestChapterNumber}`
-                    : 'Chưa có chương'}
-                </span>
+                {story.latestChapterNumber != null ? (
+                  <Link
+                    href={`/stories/${story.slug}/chapters/${story.latestChapterNumber}`}
+                    className="text-xs text-accent hover:underline"
+                  >
+                    Chương {story.latestChapterNumber}
+                  </Link>
+                ) : (
+                  <span className="text-xs text-gray-400">Chưa có chương</span>
+                )}
               </div>
             </div>
             <span className="text-xs text-gray-500 shrink-0">{timeAgo(story.updatedAt)}</span>

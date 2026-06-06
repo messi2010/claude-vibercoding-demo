@@ -47,19 +47,21 @@ export const getProgress = cache((userToken: string) =>
 
 Replace the sequential `await getSession()` → `await apiCall(...)` pattern in all three page components:
 
+Story/chapter data is public — no token needed for the main fetch. Only `getProgress` needs a token. Run session + story + chapter in parallel; use session result only for the progress call:
+
 ```ts
-// Before (sequential — session blocks data fetch)
-const session = await getSession()
-const story = await getStory(params.slug, session?.accessToken)
-
-// After (parallel — both start immediately)
-const [session, story] = await Promise.all([
+// After (parallel — session does not block story/chapter fetch)
+const [session, story, chapterData] = await Promise.all([
   getSession(),
-  getStory(params.slug),   // unauthenticated first fetch; re-fetch with token only if needed
+  getStory(params.slug),
+  getChapter(params.slug, chapterNum),
 ])
-```
 
-For authenticated data (progress), fetch after session resolves but in parallel with the main data fetch using `Promise.allSettled`.
+// Progress is user-specific — only fetch if logged in
+const progress = session?.accessToken
+  ? await getProgress(session.accessToken).catch(() => null)
+  : null
+```
 
 ### 1.3 Fix `generateMetadata` double-fetch in ChapterPage
 

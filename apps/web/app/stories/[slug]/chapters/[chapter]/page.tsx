@@ -1,21 +1,7 @@
 import { notFound } from 'next/navigation'
 import { getSession } from '../../../../../lib/auth'
-import { apiCall } from '../../../../../lib/api'
-import type { StoryResponse, Chapter } from '@truyen/types'
+import { getStory, getChapter } from '../../../../../lib/cached-api'
 import { ReadingScrollView } from '../../../../components/ReadingScrollView'
-
-interface StoryWithChapters extends StoryResponse {
-  chapters: Chapter[]
-}
-
-interface ChapterWithPages {
-  id: string
-  storyId: string
-  number: number
-  title: string | null
-  createdAt: string
-  pages: Array<{ id: string; number: number; content: string }>
-}
 
 interface ChapterPageProps {
   params: {
@@ -28,9 +14,11 @@ export async function generateMetadata({ params }: ChapterPageProps) {
   const chapterNum = parseInt(params.chapter, 10)
   if (isNaN(chapterNum)) return {}
   try {
+    // Both calls are memoized — the page component calling the same fns
+    // gets zero extra network requests.
     const [story, chapterData] = await Promise.all([
-      apiCall<StoryWithChapters>(`/stories/${params.slug}`),
-      apiCall<ChapterWithPages>(`/stories/${params.slug}/chapters/${chapterNum}`),
+      getStory(params.slug),
+      getChapter(params.slug, chapterNum),
     ])
     const suffix = chapterData.title ? ` – ${chapterData.title}` : ''
     return { title: `Ch.${chapterNum}${suffix} | ${story.title} | TruyệnHay` }
@@ -40,26 +28,17 @@ export async function generateMetadata({ params }: ChapterPageProps) {
 }
 
 export default async function ChapterPage({ params }: ChapterPageProps) {
-  const session = await getSession()
   const chapterNum = parseInt(params.chapter, 10)
   if (isNaN(chapterNum)) notFound()
 
-  let story: StoryWithChapters
-  let chapterData: ChapterWithPages
+  // All three fetched in parallel; getStory/getChapter deduplicated with generateMetadata
+  const [session, story, chapterData] = await Promise.all([
+    getSession().catch(() => null),
+    getStory(params.slug).catch(() => null),
+    getChapter(params.slug, chapterNum).catch(() => null),
+  ])
 
-  try {
-    ;[story, chapterData] = await Promise.all([
-      apiCall<StoryWithChapters>(`/stories/${params.slug}`, {
-        userToken: session?.accessToken,
-      }),
-      apiCall<ChapterWithPages>(
-        `/stories/${params.slug}/chapters/${chapterNum}`,
-        { userToken: session?.accessToken },
-      ),
-    ])
-  } catch {
-    notFound()
-  }
+  if (!story || !chapterData) notFound()
 
   const chapter = story.chapters.find((c) => c.number === chapterNum)
   if (!chapter) notFound()

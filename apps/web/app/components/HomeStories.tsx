@@ -21,7 +21,6 @@ export function HomeStories({ stories, progress }: HomeStoriesProps) {
   const [activeGenre, setActiveGenre] = useState<string>('all')
   const [search, setSearch] = useState('')
 
-  // storyId → chapter number the user has read up to
   const progressMap: Record<string, number> = {}
   if (progress) {
     for (const p of progress) {
@@ -37,40 +36,40 @@ export function HomeStories({ stories, progress }: HomeStoriesProps) {
 
   return (
     <>
-      {/* Search */}
-      <input
-        type="search"
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        placeholder="Tìm kiếm truyện..."
-        className="w-full bg-surface border border-deep rounded-lg px-4 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-accent text-sm mb-4"
-      />
-
-      {/* Genre filter chips */}
-      <div className="flex gap-2 overflow-x-auto pb-2 mb-6 scrollbar-none">
-        <button
-          onClick={() => setActiveGenre('all')}
-          className={`shrink-0 px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
-            activeGenre === 'all'
-              ? 'bg-accent text-white'
-              : 'bg-surface border border-deep text-gray-400 hover:text-white'
-          }`}
-        >
-          Tất cả
-        </button>
-        {GENRES.map((g) => (
+      {/* Filter bar */}
+      <div className="bg-surface/50 rounded-xl p-4 mb-8">
+        <input
+          type="search"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Tìm kiếm truyện..."
+          className="w-full bg-surface border border-deep rounded-lg px-4 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-accent text-sm mb-3"
+        />
+        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
           <button
-            key={g.value}
-            onClick={() => setActiveGenre(g.value)}
-            className={`shrink-0 px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
-              activeGenre === g.value
+            onClick={() => setActiveGenre('all')}
+            className={`shrink-0 px-4 py-1.5 rounded-full text-sm font-medium transition active:scale-95 ${
+              activeGenre === 'all'
                 ? 'bg-accent text-white'
                 : 'bg-surface border border-deep text-gray-400 hover:text-white'
             }`}
           >
-            {g.label}
+            Tất cả
           </button>
-        ))}
+          {GENRES.map((g) => (
+            <button
+              key={g.value}
+              onClick={() => setActiveGenre(g.value)}
+              className={`shrink-0 px-4 py-1.5 rounded-full text-sm font-medium transition active:scale-95 ${
+                activeGenre === g.value
+                  ? 'bg-accent text-white'
+                  : 'bg-surface border border-deep text-gray-400 hover:text-white'
+              }`}
+            >
+              {g.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {filtered.length === 0 ? (

@@ -7,7 +7,7 @@ import type { ReadingProgress } from '@truyen/types'
 export default async function Home() {
   // Session and stories fetched in parallel — stories are public, no token needed
   const [session, storiesResult] = await Promise.all([
-    getSession(),
+    getSession().catch(() => null),
     getStories().catch(() => null),
   ])
 

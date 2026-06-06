@@ -2,16 +2,12 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { getSession } from '../../../lib/auth'
-import { apiCall } from '../../../lib/api'
-import type { StoryResponse, Chapter, ReadingProgress } from '@truyen/types'
+import { getStory, getProgress } from '../../../lib/cached-api'
+import type { ReadingProgress } from '@truyen/types'
 import { Navbar } from '../../components/Navbar'
 import { ChapterList } from './ChapterList'
 import { ExpandableDescription } from './ExpandableDescription'
 import { GenreCover } from '../../components/GenreCover'
-
-interface StoryWithChapters extends StoryResponse {
-  chapters: Chapter[]
-}
 
 interface StoryPageProps {
   params: { slug: string }
@@ -33,7 +29,7 @@ const GENRE_COLORS: Record<string, string> = {
 
 export async function generateMetadata({ params }: StoryPageProps) {
   try {
-    const story = await apiCall<StoryWithChapters>(`/stories/${params.slug}`)
+    const story = await getStory(params.slug)
     return { title: `${story.title} | TruyệnHay` }
   } catch {
     return {}
@@ -41,41 +37,31 @@ export async function generateMetadata({ params }: StoryPageProps) {
 }
 
 export default async function StoryPage({ params }: StoryPageProps) {
-  const session = await getSession()
+  // Session and story fetched in parallel — story is public data
+  const [session, story] = await Promise.all([
+    getSession().catch(() => null),
+    getStory(params.slug).catch(() => null),
+  ])
 
-  let story: StoryWithChapters
-  try {
-    story = await apiCall<StoryWithChapters>(`/stories/${params.slug}`, {
-      userToken: session?.accessToken,
-    })
-  } catch {
-    notFound()
-  }
+  if (!story) notFound()
 
-  // Fetch reading progress for this story
-  let currentProgress: ReadingProgress | null = null
-  if (session?.accessToken) {
-    try {
-      const progressList = await apiCall<ReadingProgress[]>('/progress', {
-        userToken: session.accessToken,
-      })
-      currentProgress = progressList.find((p) => p.storyId === story.id) ?? null
-    } catch {
-      // progress fetch failure is non-fatal
-    }
-  }
+  const progressList: ReadingProgress[] | null = session?.accessToken
+    ? await getProgress(session.accessToken).catch(() => null)
+    : null
+
+  const currentProgress = progressList?.find((p) => p.storyId === story.id) ?? null
 
   const currentChapterNum = currentProgress
-    ? (story.chapters.find((c) => c.id === currentProgress!.chapterId)?.number ?? null)
+    ? (story.chapters.find((c) => c.id === currentProgress.chapterId)?.number ?? null)
     : null
 
   return (
     <>
       <Navbar />
-      <main className="max-w-7xl mx-auto px-4 py-6">
-        {/* Always two columns: cover left, info right — no vertical stack on mobile */}
+      <main className="max-w-7xl mx-auto px-4 py-6 animate-fade-in">
+        {/* Always two columns: cover left, info right */}
         <div className="flex gap-4 md:gap-8 mb-6">
-          {/* Cover — compact on mobile, 1/3 on md+ */}
+          {/* Cover */}
           <div className="w-2/5 sm:w-1/3 shrink-0">
             <div className="relative w-full aspect-[2/3] rounded-xl overflow-hidden bg-deep">
               {story.coverImage ? (
@@ -97,7 +83,7 @@ export default async function StoryPage({ params }: StoryPageProps) {
 
           {/* Info */}
           <div className="flex-1 min-w-0">
-            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white mb-2 md:mb-3 leading-tight">
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white mb-2 md:mb-3 leading-tight tracking-tight">
               {story.title}
             </h1>
 
@@ -107,13 +93,13 @@ export default async function StoryPage({ params }: StoryPageProps) {
                 <Link
                   key={g}
                   href={`/genres/${g}`}
-                  className={`text-xs md:text-sm px-2 md:px-3 py-0.5 md:py-1 rounded-full ${GENRE_COLORS[g] ?? 'bg-gray-700 text-gray-300'}`}
+                  className={`text-xs md:text-sm px-2.5 md:px-3 py-1 rounded-md ${GENRE_COLORS[g] ?? 'bg-gray-700 text-gray-300'}`}
                 >
                   {GENRE_LABELS[g] ?? g}
                 </Link>
               ))}
               <span
-                className={`text-xs md:text-sm px-2 md:px-3 py-0.5 md:py-1 rounded-full font-medium ${
+                className={`text-xs md:text-sm px-2.5 md:px-3 py-1 rounded-md font-medium ${
                   story.status === 'COMPLETED'
                     ? 'bg-blue-700 text-blue-100'
                     : 'bg-green-800 text-green-100'
@@ -123,9 +109,9 @@ export default async function StoryPage({ params }: StoryPageProps) {
               </span>
             </div>
 
-            {/* Description — hidden on mobile to save space, visible sm+ */}
+            {/* Description — hidden on mobile */}
             {story.description && (
-              <div className="hidden sm:block mb-4">
+              <div className="hidden sm:block mb-4 bg-surface/60 rounded-lg p-4">
                 <ExpandableDescription text={story.description} />
               </div>
             )}
@@ -135,7 +121,7 @@ export default async function StoryPage({ params }: StoryPageProps) {
               {story.chapters.length > 0 && (
                 <Link
                   href={`/stories/${story.slug}/chapters/${story.chapters[0].number}`}
-                  className="bg-accent text-white px-4 md:px-6 py-2.5 md:py-3 rounded-lg font-semibold hover:opacity-90 transition-opacity text-sm md:text-base text-center"
+                  className="bg-accent text-white px-4 md:px-6 py-2.5 md:py-3 rounded-lg font-semibold hover:opacity-90 transition-opacity text-sm md:text-base text-center shadow-md shadow-accent/25"
                 >
                   {currentProgress ? 'Đọc từ đầu' : 'Đọc ngay'}
                 </Link>
@@ -155,14 +141,14 @@ export default async function StoryPage({ params }: StoryPageProps) {
           </div>
         </div>
 
-        {/* Description on mobile — below the two-column row */}
+        {/* Description on mobile */}
         {story.description && (
-          <div className="sm:hidden mb-4">
+          <div className="sm:hidden mb-4 bg-surface/60 rounded-lg p-4">
             <ExpandableDescription text={story.description} />
           </div>
         )}
 
-        {/* Chapter List — full width below both columns */}
+        {/* Chapter List */}
         {story.chapters.length > 0 && (
           <ChapterList
             chapters={story.chapters}

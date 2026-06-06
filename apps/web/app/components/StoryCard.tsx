@@ -27,7 +27,7 @@ export function StoryCard({ story, readChapter }: StoryCardProps) {
   const readPct = readChapter && total > 0 ? Math.min((readChapter / total) * 100, 100) : 0
   return (
     <Link href={`/stories/${story.slug}`} className="group block">
-      <div className="bg-surface rounded-xl overflow-hidden border border-deep hover:border-accent transition-colors">
+      <div className="bg-surface rounded-xl overflow-hidden border border-deep hover:border-accent hover:shadow-lg hover:shadow-black/30 transition">
         {/* Cover */}
         <div className="relative w-full aspect-[2/3] bg-deep overflow-hidden">
           {story.coverImage ? (
@@ -35,14 +35,16 @@ export function StoryCard({ story, readChapter }: StoryCardProps) {
               src={story.coverImage}
               alt={story.title}
               fill
-              className="object-cover transition-transform duration-300 group-hover:scale-105"
+              className="object-cover transition-transform duration-300 ease-out group-hover:scale-105"
               sizes="(max-width: 768px) 50vw, 25vw"
             />
           ) : (
-            <div className="absolute inset-0 transition-transform duration-300 group-hover:scale-105">
+            <div className="absolute inset-0 transition-transform duration-300 ease-out group-hover:scale-105">
               <GenreCover title={story.title} genres={story.genres} id={story.slug} />
             </div>
           )}
+          {/* Gradient overlay for depth */}
+          <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/60 to-transparent pointer-events-none" />
           {/* Status badge */}
           <div className="absolute top-2 right-2">
             <span

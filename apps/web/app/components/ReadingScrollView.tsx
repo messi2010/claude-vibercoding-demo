@@ -20,7 +20,7 @@ type FontFamily = 'sans' | 'serif'
 
 const FONT_CLASSES: Record<FontSize, string> = {
   small:  'text-sm',
-  medium: 'text-base',
+  medium: 'text-[17px]',
   large:  'text-lg',
   xlarge: 'text-xl',
 }
@@ -397,14 +397,14 @@ export function ReadingScrollView({
 
         {/* Reading content */}
         <main
-          className="flex-1 max-w-3xl mx-auto px-4 py-8"
+          className="flex-1 max-w-3xl mx-auto px-4 py-8 animate-fade-in"
           ref={contentRef}
           onClick={showBars}
         >
           {pages.map((page, i) => (
             <section key={page.id} data-page={page.number}>
               <div
-                className={`leading-relaxed ${FONT_CLASSES[fontSize]} ${tc.text} ${
+                className={`leading-[1.85] ${FONT_CLASSES[fontSize]} ${tc.text} ${
                   fontFamily === 'serif' ? 'font-serif' : 'font-sans'
                 }`}
                 style={{ whiteSpace: 'pre-wrap' }}

@@ -87,10 +87,11 @@ export default async function StoryPage({ params }: StoryPageProps) {
   return (
     <>
       <Navbar />
-      <main className="max-w-7xl mx-auto px-4 py-8">
-        <div className="flex flex-col md:flex-row gap-8">
-          {/* Cover */}
-          <div className="w-full md:w-1/3 shrink-0">
+      <main className="max-w-7xl mx-auto px-4 py-6">
+        {/* Always two columns: cover left, info right — no vertical stack on mobile */}
+        <div className="flex gap-4 md:gap-8 mb-6">
+          {/* Cover — compact on mobile, 1/3 on md+ */}
+          <div className="w-2/5 sm:w-1/3 shrink-0">
             <div className="relative w-full aspect-[2/3] rounded-xl overflow-hidden bg-deep">
               {story.coverImage ? (
                 <Image
@@ -98,7 +99,7 @@ export default async function StoryPage({ params }: StoryPageProps) {
                   alt={story.title}
                   fill
                   className="object-cover"
-                  sizes="(max-width: 768px) 100vw, 33vw"
+                  sizes="(max-width: 640px) 40vw, 33vw"
                   priority
                 />
               ) : (
@@ -110,22 +111,24 @@ export default async function StoryPage({ params }: StoryPageProps) {
           </div>
 
           {/* Info */}
-          <div className="flex-1">
-            <h1 className="text-3xl font-bold text-white mb-3">{story.title}</h1>
+          <div className="flex-1 min-w-0">
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white mb-2 md:mb-3 leading-tight">
+              {story.title}
+            </h1>
 
             {/* Badges */}
-            <div className="flex flex-wrap gap-2 mb-4">
+            <div className="flex flex-wrap gap-1.5 md:gap-2 mb-3 md:mb-4">
               {story.genres.map((g) => (
                 <Link
                   key={g}
                   href={`/genres/${g}`}
-                  className={`text-sm px-3 py-1 rounded-full ${GENRE_COLORS[g] ?? 'bg-gray-700 text-gray-300'}`}
+                  className={`text-xs md:text-sm px-2 md:px-3 py-0.5 md:py-1 rounded-full ${GENRE_COLORS[g] ?? 'bg-gray-700 text-gray-300'}`}
                 >
                   {GENRE_LABELS[g] ?? g}
                 </Link>
               ))}
               <span
-                className={`text-sm px-3 py-1 rounded-full font-medium ${
+                className={`text-xs md:text-sm px-2 md:px-3 py-0.5 md:py-1 rounded-full font-medium ${
                   story.status === 'COMPLETED'
                     ? 'bg-blue-700 text-blue-100'
                     : 'bg-green-800 text-green-100'
@@ -134,23 +137,25 @@ export default async function StoryPage({ params }: StoryPageProps) {
                 {story.status === 'COMPLETED' ? 'Hoàn thành' : 'Đang ra'}
               </span>
               {story.isAdult && (
-                <span className="text-sm px-3 py-1 rounded-full bg-red-700 text-red-100 font-bold">
+                <span className="text-xs md:text-sm px-2 md:px-3 py-0.5 md:py-1 rounded-full bg-red-700 text-red-100 font-bold">
                   18+
                 </span>
               )}
             </div>
 
-            {/* Description */}
+            {/* Description — hidden on mobile to save space, visible sm+ */}
             {story.description && (
-              <ExpandableDescription text={story.description} />
+              <div className="hidden sm:block mb-4">
+                <ExpandableDescription text={story.description} />
+              </div>
             )}
 
             {/* CTA Buttons */}
-            <div className="flex flex-wrap gap-3 mb-8">
+            <div className="flex flex-col sm:flex-row flex-wrap gap-2 md:gap-3">
               {story.chapters.length > 0 && (
                 <Link
                   href={`/stories/${story.slug}/chapters/${story.chapters[0].number}`}
-                  className="bg-accent text-white px-6 py-3 rounded-lg font-semibold hover:opacity-90 transition-opacity"
+                  className="bg-accent text-white px-4 md:px-6 py-2.5 md:py-3 rounded-lg font-semibold hover:opacity-90 transition-opacity text-sm md:text-base text-center"
                 >
                   {currentProgress ? 'Đọc từ đầu' : 'Đọc ngay'}
                 </Link>
@@ -160,25 +165,32 @@ export default async function StoryPage({ params }: StoryPageProps) {
                 return resumeChapter ? (
                   <Link
                     href={`/stories/${story.slug}/chapters/${resumeChapter.number}`}
-                    className="bg-deep border border-accent text-accent px-6 py-3 rounded-lg font-semibold hover:bg-accent hover:text-white transition-colors"
+                    className="bg-deep border border-accent text-accent px-4 md:px-6 py-2.5 md:py-3 rounded-lg font-semibold hover:bg-accent hover:text-white transition-colors text-sm md:text-base text-center"
                   >
                     Đọc tiếp Ch.{resumeChapter.number}
                   </Link>
                 ) : null
               })()}
             </div>
-
-            {/* Chapter List */}
-            {story.chapters.length > 0 && (
-              <ChapterList
-                chapters={story.chapters}
-                slug={story.slug}
-                currentChapterId={currentProgress?.chapterId}
-                currentChapterNum={currentChapterNum}
-              />
-            )}
           </div>
         </div>
+
+        {/* Description on mobile — below the two-column row */}
+        {story.description && (
+          <div className="sm:hidden mb-4">
+            <ExpandableDescription text={story.description} />
+          </div>
+        )}
+
+        {/* Chapter List — full width below both columns */}
+        {story.chapters.length > 0 && (
+          <ChapterList
+            chapters={story.chapters}
+            slug={story.slug}
+            currentChapterId={currentProgress?.chapterId}
+            currentChapterNum={currentChapterNum}
+          />
+        )}
       </main>
     </>
   )

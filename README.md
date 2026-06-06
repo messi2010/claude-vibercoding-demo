@@ -32,8 +32,8 @@ Website đọc truyện tiếng Việt với nhiều thể loại: Kinh Dị, Hu
 ### Bước 1: Clone và cài dependencies
 
 ```bash
-git clone https://github.com/messi2010/claude-vibercoding-demo.git
-cd claude-vibercoding-demo
+git clone https://github.com/messi2010/truyen-hay.git
+cd truyen-hay
 pnpm install
 ```
 
@@ -95,7 +95,7 @@ pnpm dev
 ## Cấu trúc
 
 ```
-claude-vibercoding-demo/
+truyen-hay/
 ├── apps/
 │   ├── web/          # Next.js 14 App Router
 │   └── api/          # Express.js REST API

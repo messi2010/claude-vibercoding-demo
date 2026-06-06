@@ -35,8 +35,6 @@ const LS_SIZE_KEY   = 'reading-font-size'
 const LS_THEME_KEY  = 'reading-theme'
 const LS_FAMILY_KEY = 'reading-font-family'
 const BAR_HIDE_DELAY = 3000
-const AUTO_ADVANCE_THRESHOLD = 95  // % scroll to trigger
-const AUTO_ADVANCE_SECONDS   = 5
 
 export function ReadingScrollView({
   story,
@@ -60,13 +58,8 @@ export function ReadingScrollView({
   const [scrollProgress, setScrollProgress] = useState(0)
   const [barsVisible,  setBarsVisible]  = useState(true)
 
-  // Auto-advance
-  const [showAutoAdvance, setShowAutoAdvance] = useState(false)
-  const [countdown,       setCountdown]       = useState(AUTO_ADVANCE_SECONDS)
-
   const saveTimerRef      = useRef<ReturnType<typeof setTimeout> | null>(null)
   const hideTimerRef      = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const countdownRef      = useRef<ReturnType<typeof setInterval> | null>(null)
   const lastScrollYRef    = useRef(0)
   const contentRef        = useRef<HTMLDivElement>(null)
   const activeChapterRef  = useRef<HTMLAnchorElement>(null)
@@ -123,32 +116,6 @@ export function ReadingScrollView({
       if (hideTimerRef.current) clearTimeout(hideTimerRef.current)
     }
   }, [showBars])
-
-  // ── Auto-advance trigger ─────────────────────────────────────────────────
-  useEffect(() => {
-    if (scrollProgress >= AUTO_ADVANCE_THRESHOLD && nextChapter) {
-      setShowAutoAdvance(true)
-    } else if (scrollProgress < AUTO_ADVANCE_THRESHOLD - 10) {
-      setShowAutoAdvance(false)
-      setCountdown(AUTO_ADVANCE_SECONDS)
-      if (countdownRef.current) { clearInterval(countdownRef.current); countdownRef.current = null }
-    }
-  }, [scrollProgress, nextChapter])
-
-  useEffect(() => {
-    if (!showAutoAdvance || !nextChapter) return
-    setCountdown(AUTO_ADVANCE_SECONDS)
-    countdownRef.current = setInterval(() => {
-      setCountdown((prev) => {
-        if (prev <= 1) {
-          router.push(`/stories/${slug}/chapters/${nextChapter.number}`)
-          return 0
-        }
-        return prev - 1
-      })
-    }, 1000)
-    return () => { if (countdownRef.current) clearInterval(countdownRef.current) }
-  }, [showAutoAdvance, nextChapter, router, slug])
 
   // ── Progress save ────────────────────────────────────────────────────────
   const saveProgress = useCallback(
@@ -449,43 +416,6 @@ export function ReadingScrollView({
           ))}
         </main>
       </div>
-
-      {/* Auto-advance banner */}
-      {showAutoAdvance && nextChapter && (
-        <div className="fixed bottom-16 left-0 right-0 z-45 flex justify-center px-4 pointer-events-none">
-          <div className="bg-surface border border-accent rounded-xl shadow-2xl px-5 py-4 max-w-sm w-full pointer-events-auto">
-            <p className="text-xs text-gray-400 mb-1">Chương tiếp theo</p>
-            <p className="text-white font-semibold text-sm mb-3 truncate">
-              Ch.{nextChapter.number}{nextChapter.title ? ` – ${nextChapter.title}` : ''}
-            </p>
-            {/* Countdown progress */}
-            <div className="h-1 bg-deep rounded-full mb-3 overflow-hidden">
-              <div
-                className="h-full bg-accent rounded-full transition-[width] duration-1000"
-                style={{ width: `${((AUTO_ADVANCE_SECONDS - countdown) / AUTO_ADVANCE_SECONDS) * 100}%` }}
-              />
-            </div>
-            <div className="flex gap-2">
-              <button
-                onClick={() => {
-                  setShowAutoAdvance(false)
-                  setCountdown(AUTO_ADVANCE_SECONDS)
-                  if (countdownRef.current) { clearInterval(countdownRef.current); countdownRef.current = null }
-                }}
-                className="flex-1 h-9 bg-deep text-gray-300 hover:text-white rounded text-sm"
-              >
-                Huỷ
-              </button>
-              <button
-                onClick={() => router.push(`/stories/${slug}/chapters/${nextChapter.number}`)}
-                className="flex-1 h-9 bg-accent text-white rounded text-sm font-medium hover:opacity-90"
-              >
-                Đọc ngay ({countdown}s)
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Bottom bar */}
       <footer

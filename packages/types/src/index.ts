@@ -4,7 +4,7 @@ export type AuthProvider = 'LOCAL' | 'GOOGLE' | 'FACEBOOK'
 export type StoryStatus = 'ONGOING' | 'COMPLETED'
 
 // Genre values used throughout the app (not DB-enforced — stored as plain strings)
-export type GenreValue = 'horror' | 'fantasy' | 'martial_arts' | 'romance' | 'adult'
+export type GenreValue = 'horror' | 'fantasy' | 'martial_arts' | 'romance'
 
 // Core entities
 export interface User {

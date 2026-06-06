@@ -15,7 +15,6 @@ const GENRE_LABELS: Record<string, string> = {
   fantasy: 'Huyền Huyễn',
   martial_arts: 'Kiếm Hiệp',
   romance: 'Ngôn Tình',
-  adult: '18+',
 }
 
 export default async function AdminStoriesPage() {
@@ -54,7 +53,6 @@ export default async function AdminStoriesPage() {
               <tr className="border-b border-deep text-gray-400 text-left">
                 <th className="px-4 py-3 font-medium">Tiêu đề</th>
                 <th className="px-4 py-3 font-medium">Thể loại</th>
-                <th className="px-4 py-3 font-medium">18+</th>
                 <th className="px-4 py-3 font-medium">Trạng thái</th>
                 <th className="px-4 py-3 font-medium">Chương</th>
                 <th className="px-4 py-3 font-medium">Hành động</th>
@@ -63,7 +61,7 @@ export default async function AdminStoriesPage() {
             <tbody className="divide-y divide-deep">
               {stories.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-8 text-center text-gray-500">
+                  <td colSpan={5} className="px-4 py-8 text-center text-gray-500">
                     Chưa có truyện nào.
                   </td>
                 </tr>
@@ -82,13 +80,6 @@ export default async function AdminStoriesPage() {
                           </span>
                         ))}
                       </div>
-                    </td>
-                    <td className="px-4 py-3">
-                      {story.isAdult ? (
-                        <span className="text-xs px-2 py-0.5 rounded bg-red-900 text-red-300 font-bold">18+</span>
-                      ) : (
-                        <span className="text-gray-500 text-xs">—</span>
-                      )}
                     </td>
                     <td className="px-4 py-3">
                       <span className={`text-xs px-2 py-0.5 rounded font-medium ${

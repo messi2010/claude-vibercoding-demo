@@ -138,9 +138,6 @@ export default function RegisterPage() {
                 max={new Date().toISOString().split('T')[0]}
                 className="w-full bg-deep border border-deep rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-accent text-sm"
               />
-              <p className="text-gray-500 text-xs mt-1">
-                ⚠ Bạn cần đủ 18 tuổi để xem nội dung 18+
-              </p>
             </div>
 
             <div>

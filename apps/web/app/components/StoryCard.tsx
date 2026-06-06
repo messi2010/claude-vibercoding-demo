@@ -8,7 +8,6 @@ const GENRE_LABELS: Record<string, string> = {
   fantasy: 'Huyền Huyễn',
   martial_arts: 'Kiếm Hiệp',
   romance: 'Ngôn Tình',
-  adult: '18+',
 }
 
 const GENRE_COLORS: Record<string, string> = {
@@ -16,7 +15,6 @@ const GENRE_COLORS: Record<string, string> = {
   fantasy: 'bg-purple-900 text-purple-200',
   martial_arts: 'bg-yellow-900 text-yellow-200',
   romance: 'bg-pink-900 text-pink-200',
-  adult: 'bg-red-800 text-red-100',
 }
 
 interface StoryCardProps {
@@ -57,11 +55,6 @@ export function StoryCard({ story, readChapter }: StoryCardProps) {
               {story.status === 'COMPLETED' ? 'Hoàn thành' : 'Đang ra'}
             </span>
           </div>
-          {story.isAdult && (
-            <div className="absolute top-2 left-2">
-              <span className="text-xs px-2 py-0.5 rounded bg-red-700 text-white font-bold">18+</span>
-            </div>
-          )}
           {/* Reading progress stripe */}
           {readPct > 0 && (
             <div className="absolute bottom-0 left-0 right-0 h-1 bg-black/40">

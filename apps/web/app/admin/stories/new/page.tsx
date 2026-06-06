@@ -9,7 +9,6 @@ const GENRES = [
   { value: 'fantasy', label: 'Huyền Huyễn' },
   { value: 'martial_arts', label: 'Kiếm Hiệp' },
   { value: 'romance', label: 'Ngôn Tình' },
-  { value: 'adult', label: '18+' },
 ]
 
 function slugify(text: string): string {
@@ -29,7 +28,6 @@ export default function NewStoryPage() {
   const [title, setTitle] = useState('')
   const [slug, setSlug] = useState('')
   const [description, setDescription] = useState('')
-  const [isAdult, setIsAdult] = useState(false)
   const [status, setStatus] = useState<'ONGOING' | 'COMPLETED'>('ONGOING')
   const [genres, setGenres] = useState<string[]>([])
   const [error, setError] = useState('')
@@ -54,7 +52,7 @@ export default function NewStoryPage() {
       const res = await fetch('/api/admin/stories', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title, slug, description, isAdult, status, genres }),
+        body: JSON.stringify({ title, slug, description, status, genres }),
       })
       if (!res.ok) {
         const data = await res.json().catch(() => ({}))
@@ -153,27 +151,6 @@ export default function NewStoryPage() {
               <option value="ONGOING">Đang ra</option>
               <option value="COMPLETED">Hoàn thành</option>
             </select>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              role="switch"
-              aria-checked={isAdult}
-              onClick={() => setIsAdult((v) => !v)}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                isAdult ? 'bg-red-600' : 'bg-gray-700'
-              }`}
-            >
-              <span
-                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                  isAdult ? 'translate-x-6' : 'translate-x-1'
-                }`}
-              />
-            </button>
-            <label className="text-gray-300 text-sm select-none cursor-pointer" onClick={() => setIsAdult((v) => !v)}>
-              Nội dung 18+
-            </label>
           </div>
 
           <div className="flex gap-3 pt-2">

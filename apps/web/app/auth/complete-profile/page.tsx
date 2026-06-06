@@ -54,8 +54,7 @@ export default function CompleteProfilePage() {
 
         <div className="bg-surface border border-deep rounded-2xl p-8">
           <p className="text-gray-300 text-sm mb-6">
-            Để tiếp tục sử dụng dịch vụ, vui lòng cung cấp ngày sinh của bạn. Thông tin này giúp
-            xác minh độ tuổi cho nội dung 18+.
+            Để tiếp tục sử dụng dịch vụ, vui lòng cung cấp ngày sinh của bạn.
           </p>
 
           {error && (
@@ -78,9 +77,6 @@ export default function CompleteProfilePage() {
                 max={new Date().toISOString().split('T')[0]}
                 className="w-full bg-deep border border-deep rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-accent text-sm"
               />
-              <p className="text-gray-500 text-xs mt-1">
-                ⚠ Bạn cần đủ 18 tuổi để xem nội dung 18+
-              </p>
             </div>
 
             <button

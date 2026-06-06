@@ -5,7 +5,6 @@ import { getSession } from '../../../lib/auth'
 import { apiCall } from '../../../lib/api'
 import type { StoryResponse, Chapter, ReadingProgress } from '@truyen/types'
 import { Navbar } from '../../components/Navbar'
-import { AgeGate } from '../../components/AgeGate'
 import { ChapterList } from './ChapterList'
 import { ExpandableDescription } from './ExpandableDescription'
 import { GenreCover } from '../../components/GenreCover'
@@ -23,7 +22,6 @@ const GENRE_LABELS: Record<string, string> = {
   fantasy: 'Huyền Huyễn',
   martial_arts: 'Kiếm Hiệp',
   romance: 'Ngôn Tình',
-  adult: '18+',
 }
 
 const GENRE_COLORS: Record<string, string> = {
@@ -31,7 +29,6 @@ const GENRE_COLORS: Record<string, string> = {
   fantasy: 'bg-purple-900 text-purple-200',
   martial_arts: 'bg-yellow-900 text-yellow-200',
   romance: 'bg-pink-900 text-pink-200',
-  adult: 'bg-red-800 text-red-100',
 }
 
 export async function generateMetadata({ params }: StoryPageProps) {
@@ -53,18 +50,6 @@ export default async function StoryPage({ params }: StoryPageProps) {
     })
   } catch {
     notFound()
-  }
-
-  // Adult gate — show only if logged-in but not age-verified
-  if (story.isAdult && (!session || !(session.user as { isAgeVerified?: boolean })?.isAgeVerified)) {
-    return (
-      <>
-        <Navbar />
-        <main className="max-w-7xl mx-auto px-4 py-8">
-          <AgeGate loggedIn={!!session} />
-        </main>
-      </>
-    )
   }
 
   // Fetch reading progress for this story
@@ -136,11 +121,6 @@ export default async function StoryPage({ params }: StoryPageProps) {
               >
                 {story.status === 'COMPLETED' ? 'Hoàn thành' : 'Đang ra'}
               </span>
-              {story.isAdult && (
-                <span className="text-xs md:text-sm px-2 md:px-3 py-0.5 md:py-1 rounded-full bg-red-700 text-red-100 font-bold">
-                  18+
-                </span>
-              )}
             </div>
 
             {/* Description — hidden on mobile to save space, visible sm+ */}

@@ -17,7 +17,6 @@ const GENRE_CONFIG: Record<string, GenreConfig> = {
   martial_arts: { bg1: '#0a1628', bg2: '#1e3a5f', accent: '#e76f51', label: 'KIẾM HIỆP' },
   horror:       { bg1: '#0a0a0a', bg2: '#2a0000', accent: '#cc2222', label: 'KINH DỊ' },
   romance:      { bg1: '#1a0a14', bg2: '#3d1a30', accent: '#e91e8c', label: 'NGÔN TÌNH' },
-  adult:        { bg1: '#1a0505', bg2: '#3d0d1a', accent: '#ff6b9d', label: '18+' },
 }
 const FALLBACK = GENRE_CONFIG.fantasy
 
@@ -127,28 +126,11 @@ function DecoRomance({ accent }: { accent: string }) {
   )
 }
 
-function DecoAdult({ accent }: { accent: string }) {
-  return (
-    <>
-      <ellipse cx="150" cy="112" rx="68" ry="52" fill="none" stroke={accent} strokeWidth="1.5" opacity="0.25" />
-      <ellipse cx="150" cy="112" rx="48" ry="36" fill={accent} opacity="0.07" />
-      <ellipse cx="126" cy="100" rx="32" ry="44" fill="none" stroke={accent} strokeWidth="1" opacity="0.2"
-        transform="rotate(-18, 126, 100)" />
-      <ellipse cx="174" cy="100" rx="32" ry="44" fill="none" stroke={accent} strokeWidth="1" opacity="0.2"
-        transform="rotate(18, 174, 100)" />
-      <circle cx="150" cy="112" r="7" fill={accent} opacity="0.65" />
-      <circle cx="150" cy="112" r="14" fill="none" stroke={accent} strokeWidth="1" opacity="0.35" />
-      <circle cx="150" cy="112" r="22" fill="none" stroke={accent} strokeWidth="0.5" opacity="0.2" />
-    </>
-  )
-}
-
 const DECO_MAP: Record<string, (props: { accent: string; uid: string }) => React.ReactNode> = {
   fantasy:      ({ accent }) => <DecoFantasy accent={accent} />,
   martial_arts: ({ accent }) => <DecoMartialArts accent={accent} />,
   horror:       ({ accent, uid }) => <DecoHorror accent={accent} uid={uid} />,
   romance:      ({ accent }) => <DecoRomance accent={accent} />,
-  adult:        ({ accent }) => <DecoAdult accent={accent} />,
 }
 
 import React from 'react'

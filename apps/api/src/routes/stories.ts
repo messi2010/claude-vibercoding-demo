@@ -14,11 +14,7 @@ storiesRouter.get('/', async (req: Request, res: Response): Promise<void> => {
   const pageSizeNum = Math.min(100, Math.max(1, parseInt(pageSize, 10) || 20))
   const skip = (pageNum - 1) * pageSizeNum
 
-  const userIsAgeVerified = req.user?.isAgeVerified ?? false
-  const adultFilter = userIsAgeVerified ? undefined : false
-
   const where = {
-    isAdult: adultFilter,
     ...(genre ? { genres: { some: { genre } } } : {}),
   }
 
@@ -56,7 +52,6 @@ storiesRouter.get('/', async (req: Request, res: Response): Promise<void> => {
 // GET /stories/:slug
 storiesRouter.get('/:slug', async (req: Request, res: Response): Promise<void> => {
   const { slug } = req.params
-  const userIsAgeVerified = req.user?.isAgeVerified ?? false
 
   const story = await prisma.story.findUnique({
     where: { slug },
@@ -71,11 +66,6 @@ storiesRouter.get('/:slug', async (req: Request, res: Response): Promise<void> =
     return
   }
 
-  if (story.isAdult && !userIsAgeVerified) {
-    res.status(403).json({ error: 'Age verification required' })
-    return
-  }
-
   res.json({
     ...story,
     genres: story.genres.map((g) => g.genre),
@@ -86,7 +76,6 @@ storiesRouter.get('/:slug', async (req: Request, res: Response): Promise<void> =
 storiesRouter.get('/:slug/chapters/:chapterNumber', async (req: Request, res: Response): Promise<void> => {
   const { slug, chapterNumber } = req.params
   const chNum = parseInt(chapterNumber, 10)
-  const userIsAgeVerified = req.user?.isAgeVerified ?? false
 
   if (isNaN(chNum)) {
     res.status(400).json({ error: 'Invalid chapter number' })
@@ -97,11 +86,6 @@ storiesRouter.get('/:slug/chapters/:chapterNumber', async (req: Request, res: Re
 
   if (!story) {
     res.status(404).json({ error: 'Story not found' })
-    return
-  }
-
-  if (story.isAdult && !userIsAgeVerified) {
-    res.status(403).json({ error: 'Age verification required' })
     return
   }
 
@@ -123,7 +107,6 @@ storiesRouter.get('/:slug/chapters/:chapterNumber/pages/:pageNumber', async (req
   const { slug, chapterNumber, pageNumber } = req.params
   const chNum = parseInt(chapterNumber, 10)
   const pgNum = parseInt(pageNumber, 10)
-  const userIsAgeVerified = req.user?.isAgeVerified ?? false
 
   if (isNaN(chNum) || isNaN(pgNum)) {
     res.status(400).json({ error: 'Invalid chapter or page number' })
@@ -134,11 +117,6 @@ storiesRouter.get('/:slug/chapters/:chapterNumber/pages/:pageNumber', async (req
 
   if (!story) {
     res.status(404).json({ error: 'Story not found' })
-    return
-  }
-
-  if (story.isAdult && !userIsAgeVerified) {
-    res.status(403).json({ error: 'Age verification required' })
     return
   }
 

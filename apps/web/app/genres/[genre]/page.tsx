@@ -14,7 +14,6 @@ const GENRES = [
   { value: 'fantasy', label: 'Huyền Huyễn' },
   { value: 'martial_arts', label: 'Kiếm Hiệp' },
   { value: 'romance', label: 'Ngôn Tình' },
-  { value: 'adult', label: '18+' },
 ]
 
 export function generateMetadata({ params }: GenrePageProps) {

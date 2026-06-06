@@ -8,7 +8,6 @@ const GENRES = [
   { value: 'fantasy', label: 'Huyền Huyễn' },
   { value: 'martial_arts', label: 'Kiếm Hiệp' },
   { value: 'romance', label: 'Ngôn Tình' },
-  { value: 'adult', label: '18+' },
 ]
 
 interface EditStoryFormProps {
@@ -20,7 +19,6 @@ type Status = 'idle' | 'saving' | 'saved' | 'error'
 export function EditStoryForm({ story }: EditStoryFormProps) {
   const [title, setTitle] = useState(story.title)
   const [description, setDescription] = useState(story.description ?? '')
-  const [isAdult, setIsAdult] = useState(story.isAdult)
   const [storyStatus, setStoryStatus] = useState(story.status)
   const [genres, setGenres] = useState<string[]>(story.genres)
   const [status, setStatus] = useState<Status>('idle')
@@ -40,7 +38,7 @@ export function EditStoryForm({ story }: EditStoryFormProps) {
       const res = await fetch(`/api/admin/stories/${story.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title, description, isAdult, status: storyStatus, genres }),
+        body: JSON.stringify({ title, description, status: storyStatus, genres }),
       })
       if (!res.ok) {
         const data = await res.json().catch(() => ({}))
@@ -116,24 +114,6 @@ export function EditStoryForm({ story }: EditStoryFormProps) {
           </select>
         </div>
 
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            role="switch"
-            aria-checked={isAdult}
-            onClick={() => setIsAdult((v) => !v)}
-            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-              isAdult ? 'bg-red-600' : 'bg-gray-700'
-            }`}
-          >
-            <span
-              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                isAdult ? 'translate-x-6' : 'translate-x-1'
-              }`}
-            />
-          </button>
-          <span className="text-gray-300 text-sm">Nội dung 18+</span>
-        </div>
       </div>
 
       <div className="flex items-center gap-3">

@@ -4,12 +4,18 @@
 const API_URL = process.env.API_URL || 'http://localhost:4000'
 const INTERNAL_API_SECRET = process.env.INTERNAL_API_SECRET || ''
 
+interface NextConfig {
+  revalidate?: number | false
+  tags?: string[]
+}
+
 interface FetchOptions extends RequestInit {
   userToken?: string
+  next?: NextConfig
 }
 
 export async function apiCall<T>(path: string, options: FetchOptions = {}): Promise<T> {
-  const { userToken, ...fetchOptions } = options
+  const { userToken, next, ...fetchOptions } = options
 
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
@@ -24,6 +30,7 @@ export async function apiCall<T>(path: string, options: FetchOptions = {}): Prom
   const res = await fetch(`${API_URL}${path}`, {
     ...fetchOptions,
     headers,
+    ...(next ? { next } : {}),
   })
 
   if (!res.ok) {

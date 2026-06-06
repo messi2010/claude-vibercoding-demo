@@ -20,7 +20,7 @@ export default async function Home() {
   return (
     <>
       <Navbar />
-      <main className="max-w-7xl mx-auto px-4 py-8 animate-fade-in">
+      <main className="max-w-7xl mx-auto px-4 py-8 motion-safe:animate-fade-in">
         <HomeStories stories={stories} progress={progress} />
       </main>
     </>

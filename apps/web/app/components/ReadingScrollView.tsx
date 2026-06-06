@@ -19,10 +19,10 @@ type Theme      = 'dark' | 'sepia' | 'light'
 type FontFamily = 'sans' | 'serif'
 
 const FONT_CLASSES: Record<FontSize, string> = {
-  small:  'text-sm',
-  medium: 'text-[17px]',
-  large:  'text-lg',
-  xlarge: 'text-xl',
+  small:  'text-sm leading-relaxed',
+  medium: 'text-[17px] leading-[1.85]',
+  large:  'text-lg leading-relaxed',
+  xlarge: 'text-xl leading-relaxed',
 }
 
 const THEME_CLASSES: Record<Theme, { page: string; text: string }> = {
@@ -397,14 +397,14 @@ export function ReadingScrollView({
 
         {/* Reading content */}
         <main
-          className="flex-1 max-w-3xl mx-auto px-4 py-8 animate-fade-in"
+          className="flex-1 max-w-3xl mx-auto px-4 py-8 motion-safe:animate-fade-in"
           ref={contentRef}
           onClick={showBars}
         >
           {pages.map((page, i) => (
             <section key={page.id} data-page={page.number}>
               <div
-                className={`leading-[1.85] ${FONT_CLASSES[fontSize]} ${tc.text} ${
+                className={`${FONT_CLASSES[fontSize]} ${tc.text} ${
                   fontFamily === 'serif' ? 'font-serif' : 'font-sans'
                 }`}
                 style={{ whiteSpace: 'pre-wrap' }}

@@ -58,7 +58,7 @@ export default async function StoryPage({ params }: StoryPageProps) {
   return (
     <>
       <Navbar />
-      <main className="max-w-7xl mx-auto px-4 py-6 animate-fade-in">
+      <main className="max-w-7xl mx-auto px-4 py-6 motion-safe:animate-fade-in">
         {/* Always two columns: cover left, info right */}
         <div className="flex gap-4 md:gap-8 mb-6">
           {/* Cover */}

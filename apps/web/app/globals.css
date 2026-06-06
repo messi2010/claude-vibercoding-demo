@@ -3,7 +3,8 @@
 @tailwind utilities;
 
 body {
-  background-color: #1a1a2e;
+  background: radial-gradient(ellipse at top, #1e1e3f 0%, #1a1a2e 60%);
+  min-height: 100vh;
   color: #e0e0e0;
 }
 

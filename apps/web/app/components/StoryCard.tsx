@@ -21,9 +21,12 @@ const GENRE_COLORS: Record<string, string> = {
 
 interface StoryCardProps {
   story: StoryResponse
+  readChapter?: number
 }
 
-export function StoryCard({ story }: StoryCardProps) {
+export function StoryCard({ story, readChapter }: StoryCardProps) {
+  const total = story.latestChapterNumber ?? 0
+  const readPct = readChapter && total > 0 ? Math.min((readChapter / total) * 100, 100) : 0
   return (
     <Link href={`/stories/${story.slug}`} className="group block">
       <div className="bg-surface rounded-xl overflow-hidden border border-deep hover:border-accent transition-colors">
@@ -57,6 +60,15 @@ export function StoryCard({ story }: StoryCardProps) {
           {story.isAdult && (
             <div className="absolute top-2 left-2">
               <span className="text-xs px-2 py-0.5 rounded bg-red-700 text-white font-bold">18+</span>
+            </div>
+          )}
+          {/* Reading progress stripe */}
+          {readPct > 0 && (
+            <div className="absolute bottom-0 left-0 right-0 h-1 bg-black/40">
+              <div
+                className="h-full bg-accent"
+                style={{ width: `${readPct}%` }}
+              />
             </div>
           )}
         </div>

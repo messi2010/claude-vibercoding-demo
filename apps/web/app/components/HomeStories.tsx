@@ -22,6 +22,14 @@ export function HomeStories({ stories, progress }: HomeStoriesProps) {
   const [activeGenre, setActiveGenre] = useState<string>('all')
   const [search, setSearch] = useState('')
 
+  // storyId → chapter number the user has read up to
+  const progressMap: Record<string, number> = {}
+  if (progress) {
+    for (const p of progress) {
+      if (p.chapter?.number) progressMap[p.storyId] = p.chapter.number
+    }
+  }
+
   const filtered = stories.filter((s) => {
     const matchesGenre = activeGenre === 'all' || s.genres.includes(activeGenre)
     const matchesSearch = search === '' || s.title.toLowerCase().includes(search.toLowerCase())
@@ -72,7 +80,7 @@ export function HomeStories({ stories, progress }: HomeStoriesProps) {
         </div>
       ) : (
         <>
-          <FeaturedGrid stories={filtered} />
+          <FeaturedGrid stories={filtered} progressMap={progressMap} />
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2">
               <RecentUpdates stories={filtered} />

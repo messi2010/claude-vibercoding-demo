@@ -14,16 +14,29 @@ interface ReadingScrollViewProps {
   session: Session | null
 }
 
-type FontSize = 'small' | 'medium' | 'large'
+type FontSize   = 'small' | 'medium' | 'large' | 'xlarge'
+type Theme      = 'dark' | 'sepia' | 'light'
+type FontFamily = 'sans' | 'serif'
 
 const FONT_CLASSES: Record<FontSize, string> = {
-  small: 'text-sm',
+  small:  'text-sm',
   medium: 'text-base',
-  large: 'text-lg',
+  large:  'text-lg',
+  xlarge: 'text-xl',
 }
 
-const LS_FONT_KEY = 'reading-font-size'
+const THEME_CLASSES: Record<Theme, { page: string; text: string }> = {
+  dark:  { page: 'bg-background', text: 'text-gray-200' },
+  sepia: { page: 'bg-[#f5f0e8]',  text: 'text-[#2c2018]' },
+  light: { page: 'bg-gray-50',    text: 'text-gray-800' },
+}
+
+const LS_SIZE_KEY   = 'reading-font-size'
+const LS_THEME_KEY  = 'reading-theme'
+const LS_FAMILY_KEY = 'reading-font-family'
 const BAR_HIDE_DELAY = 3000
+const AUTO_ADVANCE_THRESHOLD = 95  // % scroll to trigger
+const AUTO_ADVANCE_SECONDS   = 5
 
 export function ReadingScrollView({
   story,
@@ -34,59 +47,76 @@ export function ReadingScrollView({
   session,
 }: ReadingScrollViewProps) {
   const router = useRouter()
-  const [fontSize, setFontSize] = useState<FontSize>('medium')
-  const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
+
+  // Reader settings
+  const [fontSize,   setFontSize]   = useState<FontSize>('medium')
+  const [theme,      setTheme]      = useState<Theme>('dark')
+  const [fontFamily, setFontFamily] = useState<FontFamily>('sans')
+  const [settingsOpen, setSettingsOpen] = useState(false)
+
+  // UI state
+  const [sidebarOpen,  setSidebarOpen]  = useState(false)
+  const [saveStatus,   setSaveStatus]   = useState<'idle'|'saving'|'saved'|'error'>('idle')
   const [scrollProgress, setScrollProgress] = useState(0)
-  const [barsVisible, setBarsVisible] = useState(true)
-  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const lastScrollYRef = useRef(0)
-  const contentRef = useRef<HTMLDivElement>(null)
-  const activeChapterRef = useRef<HTMLAnchorElement>(null)
+  const [barsVisible,  setBarsVisible]  = useState(true)
 
-  useEffect(() => {
-    if (sidebarOpen && activeChapterRef.current) {
-      activeChapterRef.current.scrollIntoView({ block: 'center', behavior: 'smooth' })
-    }
-  }, [sidebarOpen])
+  // Auto-advance
+  const [showAutoAdvance, setShowAutoAdvance] = useState(false)
+  const [countdown,       setCountdown]       = useState(AUTO_ADVANCE_SECONDS)
 
+  const saveTimerRef      = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const hideTimerRef      = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const countdownRef      = useRef<ReturnType<typeof setInterval> | null>(null)
+  const lastScrollYRef    = useRef(0)
+  const contentRef        = useRef<HTMLDivElement>(null)
+  const activeChapterRef  = useRef<HTMLAnchorElement>(null)
+
+  const prevChapter = chapters.find((c) => c.number === chapter.number - 1) ?? null
+  const nextChapter = chapters.find((c) => c.number === chapter.number + 1) ?? null
+
+  // ── Persist settings ────────────────────────────────────────────────────
   useEffect(() => {
-    const stored = localStorage.getItem(LS_FONT_KEY) as FontSize | null
-    if (stored && stored in FONT_CLASSES) setFontSize(stored)
+    const sz = localStorage.getItem(LS_SIZE_KEY)   as FontSize   | null
+    const th = localStorage.getItem(LS_THEME_KEY)  as Theme      | null
+    const ff = localStorage.getItem(LS_FAMILY_KEY) as FontFamily | null
+    if (sz && sz in FONT_CLASSES) setFontSize(sz)
+    if (th && th in THEME_CLASSES) setTheme(th)
+    if (ff === 'sans' || ff === 'serif') setFontFamily(ff)
   }, [])
 
-  const updateFontSize = (size: FontSize) => {
-    setFontSize(size)
-    localStorage.setItem(LS_FONT_KEY, size)
-  }
+  const updateFontSize = (s: FontSize) => { setFontSize(s);   localStorage.setItem(LS_SIZE_KEY,   s) }
+  const updateTheme    = (t: Theme)    => { setTheme(t);      localStorage.setItem(LS_THEME_KEY,  t) }
+  const updateFamily   = (f: FontFamily) => { setFontFamily(f); localStorage.setItem(LS_FAMILY_KEY, f) }
 
+  // ── Sidebar autoscroll ───────────────────────────────────────────────────
+  useEffect(() => {
+    if (sidebarOpen && activeChapterRef.current)
+      activeChapterRef.current.scrollIntoView({ block: 'center', behavior: 'smooth' })
+  }, [sidebarOpen])
+
+  // ── Bar auto-hide ────────────────────────────────────────────────────────
   const showBars = useCallback(() => {
     setBarsVisible(true)
     if (hideTimerRef.current) clearTimeout(hideTimerRef.current)
     hideTimerRef.current = setTimeout(() => setBarsVisible(false), BAR_HIDE_DELAY)
   }, [])
 
-  // Scroll listener: progress bar + auto-hide
   useEffect(() => {
     const handleScroll = () => {
       requestAnimationFrame(() => {
-        const scrollY = window.scrollY
+        const scrollY   = window.scrollY
         const maxScroll = document.documentElement.scrollHeight - window.innerHeight
-        setScrollProgress(maxScroll > 0 ? (scrollY / maxScroll) * 100 : 0)
+        const pct       = maxScroll > 0 ? (scrollY / maxScroll) * 100 : 0
+        setScrollProgress(pct)
 
-        if (scrollY < lastScrollYRef.current) {
-          // scrolling up — show bars immediately
-          showBars()
-        } else {
-          // scrolling down — reset hide timer
+        if (scrollY < lastScrollYRef.current) showBars()
+        else {
           if (hideTimerRef.current) clearTimeout(hideTimerRef.current)
           hideTimerRef.current = setTimeout(() => setBarsVisible(false), BAR_HIDE_DELAY)
         }
         lastScrollYRef.current = scrollY
       })
     }
-
     window.addEventListener('scroll', handleScroll, { passive: true })
     return () => {
       window.removeEventListener('scroll', handleScroll)
@@ -94,6 +124,33 @@ export function ReadingScrollView({
     }
   }, [showBars])
 
+  // ── Auto-advance trigger ─────────────────────────────────────────────────
+  useEffect(() => {
+    if (scrollProgress >= AUTO_ADVANCE_THRESHOLD && nextChapter) {
+      setShowAutoAdvance(true)
+    } else if (scrollProgress < AUTO_ADVANCE_THRESHOLD - 10) {
+      setShowAutoAdvance(false)
+      setCountdown(AUTO_ADVANCE_SECONDS)
+      if (countdownRef.current) { clearInterval(countdownRef.current); countdownRef.current = null }
+    }
+  }, [scrollProgress, nextChapter])
+
+  useEffect(() => {
+    if (!showAutoAdvance || !nextChapter) return
+    setCountdown(AUTO_ADVANCE_SECONDS)
+    countdownRef.current = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          router.push(`/stories/${slug}/chapters/${nextChapter.number}`)
+          return 0
+        }
+        return prev - 1
+      })
+    }, 1000)
+    return () => { if (countdownRef.current) clearInterval(countdownRef.current) }
+  }, [showAutoAdvance, nextChapter, router, slug])
+
+  // ── Progress save ────────────────────────────────────────────────────────
   const saveProgress = useCallback(
     (pageNumber: number) => {
       if (!session) return
@@ -103,11 +160,7 @@ export function ReadingScrollView({
         fetch('/api/progress', {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            storyId: story.id,
-            chapterId: chapter.id,
-            pageNumber,
-          }),
+          body: JSON.stringify({ storyId: story.id, chapterId: chapter.id, pageNumber }),
         })
           .then(() => setSaveStatus('saved'))
           .catch(() => setSaveStatus('error'))
@@ -122,11 +175,8 @@ export function ReadingScrollView({
       (entries) => {
         for (const entry of entries) {
           if (entry.isIntersecting) {
-            const pageNum = parseInt(
-              (entry.target as HTMLElement).dataset.page ?? '0',
-              10,
-            )
-            if (pageNum > 0) saveProgress(pageNum)
+            const p = parseInt((entry.target as HTMLElement).dataset.page ?? '0', 10)
+            if (p > 0) saveProgress(p)
           }
         }
       },
@@ -137,49 +187,48 @@ export function ReadingScrollView({
     return () => observer.disconnect()
   }, [session, saveProgress])
 
-  const prevChapter = chapters.find((c) => c.number === chapter.number - 1) ?? null
-  const nextChapter = chapters.find((c) => c.number === chapter.number + 1) ?? null
-
-  // Keyboard navigation
+  // ── Keyboard nav ─────────────────────────────────────────────────────────
   useEffect(() => {
-    const handleKey = (e: KeyboardEvent) => {
+    const handle = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return
-      if (e.key === 'ArrowLeft' && prevChapter) router.push(`/stories/${slug}/chapters/${prevChapter.number}`)
+      if (e.key === 'ArrowLeft'  && prevChapter) router.push(`/stories/${slug}/chapters/${prevChapter.number}`)
       if (e.key === 'ArrowRight' && nextChapter) router.push(`/stories/${slug}/chapters/${nextChapter.number}`)
     }
-    window.addEventListener('keydown', handleKey)
-    return () => window.removeEventListener('keydown', handleKey)
+    window.addEventListener('keydown', handle)
+    return () => window.removeEventListener('keydown', handle)
   }, [router, slug, prevChapter, nextChapter])
 
-  // Swipe navigation
+  // ── Swipe nav ────────────────────────────────────────────────────────────
   useEffect(() => {
-    let touchStartX = 0
-    const onStart = (e: TouchEvent) => { touchStartX = e.touches[0].clientX }
-    const onEnd = (e: TouchEvent) => {
-      const dx = e.changedTouches[0].clientX - touchStartX
+    let startX = 0
+    const onStart = (e: TouchEvent) => { startX = e.touches[0].clientX }
+    const onEnd   = (e: TouchEvent) => {
+      const dx = e.changedTouches[0].clientX - startX
       if (Math.abs(dx) < 60) return
       if (dx > 0 && prevChapter) router.push(`/stories/${slug}/chapters/${prevChapter.number}`)
       if (dx < 0 && nextChapter) router.push(`/stories/${slug}/chapters/${nextChapter.number}`)
     }
     window.addEventListener('touchstart', onStart, { passive: true })
-    window.addEventListener('touchend', onEnd, { passive: true })
+    window.addEventListener('touchend',   onEnd,   { passive: true })
     return () => {
       window.removeEventListener('touchstart', onStart)
-      window.removeEventListener('touchend', onEnd)
+      window.removeEventListener('touchend',   onEnd)
     }
   }, [router, slug, prevChapter, nextChapter])
 
   const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' })
+  const tc = THEME_CLASSES[theme]
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      {/* Reading progress bar — fixed above everything */}
+    <div className={`min-h-screen flex flex-col ${tc.page}`}>
+
+      {/* Progress strip */}
       <div
         className="fixed top-0 left-0 h-0.5 bg-accent z-50 transition-[width] duration-100"
         style={{ width: `${scrollProgress}%` }}
       />
 
-      {/* TopBar */}
+      {/* Top bar */}
       <header
         className={`bg-surface border-b border-deep sticky top-0 z-40 transform transition-transform duration-300 ${
           barsVisible ? 'translate-y-0' : '-translate-y-full'
@@ -194,47 +243,26 @@ export function ReadingScrollView({
             📖
           </Link>
           <nav className="flex items-center gap-1 text-xs text-gray-400 flex-1 min-w-0">
-            <Link
-              href={`/stories/${slug}`}
-              className="hover:text-white truncate hidden sm:block"
-            >
+            <Link href={`/stories/${slug}`} className="hover:text-white truncate hidden sm:block">
               {story.title}
             </Link>
             <span className="mx-1 hidden sm:block">›</span>
             <span className="text-gray-300 truncate">
-              Ch.{chapter.number}
-              {chapter.title ? ` – ${chapter.title}` : ''}
+              Ch.{chapter.number}{chapter.title ? ` – ${chapter.title}` : ''}
             </span>
           </nav>
 
-          {/* Font size controls */}
-          <div className="flex items-center gap-1 shrink-0">
-            {(
-              [
-                ['small', 'a'],
-                ['medium', 'A'],
-                ['large', 'A'],
-              ] as [FontSize, string][]
-            ).map(([sz, label]) => (
-              <button
-                key={sz}
-                onClick={() => updateFontSize(sz)}
-                title={sz}
-                className={`w-7 h-7 flex items-center justify-center rounded leading-none ${
-                  sz === 'small'
-                    ? 'text-xs'
-                    : sz === 'medium'
-                      ? 'text-sm'
-                      : 'text-base'
-                } ${
-                  fontSize === sz
-                    ? 'bg-accent text-white'
-                    : 'bg-deep text-gray-400 hover:text-white'
-                }`}
-              >
-                {label}
-              </button>
-            ))}
+          {/* Settings button */}
+          <div className="relative shrink-0">
+            <button
+              onClick={() => setSettingsOpen((v) => !v)}
+              title="Cài đặt đọc"
+              className={`w-8 h-8 flex items-center justify-center rounded text-sm transition-colors ${
+                settingsOpen ? 'bg-accent text-white' : 'bg-deep text-gray-400 hover:text-white'
+              }`}
+            >
+              ⚙
+            </button>
           </div>
 
           {/* Sidebar toggle */}
@@ -248,6 +276,89 @@ export function ReadingScrollView({
         </div>
       </header>
 
+      {/* Settings panel — bottom sheet */}
+      {settingsOpen && (
+        <>
+          <div
+            className="fixed inset-0 z-40"
+            onClick={() => setSettingsOpen(false)}
+          />
+          <div className="fixed bottom-0 left-0 right-0 z-50 bg-surface border-t border-deep rounded-t-2xl shadow-2xl px-5 pt-4 pb-8">
+            <div className="flex items-center justify-between mb-5">
+              <span className="text-white font-semibold text-sm">Cài đặt đọc</span>
+              <button onClick={() => setSettingsOpen(false)} className="text-gray-400 hover:text-white text-lg leading-none">✕</button>
+            </div>
+
+            {/* Font size */}
+            <div className="mb-5">
+              <p className="text-xs text-gray-500 mb-2 uppercase tracking-wide">Cỡ chữ</p>
+              <div className="flex gap-2">
+                {(['small','medium','large','xlarge'] as FontSize[]).map((sz, i) => {
+                  const labels = ['S', 'M', 'L', 'XL']
+                  return (
+                    <button
+                      key={sz}
+                      onClick={() => updateFontSize(sz)}
+                      className={`flex-1 h-9 rounded text-sm font-medium transition-colors ${
+                        fontSize === sz ? 'bg-accent text-white' : 'bg-deep text-gray-400 hover:text-white'
+                      }`}
+                    >
+                      {labels[i]}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+
+            {/* Theme */}
+            <div className="mb-5">
+              <p className="text-xs text-gray-500 mb-2 uppercase tracking-wide">Giao diện</p>
+              <div className="flex gap-2">
+                {([
+                  { value: 'dark',  label: 'Tối',  bg: '#111827', text: '#e5e7eb' },
+                  { value: 'sepia', label: 'Kem',  bg: '#f5f0e8', text: '#2c2018' },
+                  { value: 'light', label: 'Sáng', bg: '#f9fafb', text: '#1f2937' },
+                ] as { value: Theme; label: string; bg: string; text: string }[]).map((t) => (
+                  <button
+                    key={t.value}
+                    onClick={() => updateTheme(t.value)}
+                    style={{ backgroundColor: t.bg, color: t.text }}
+                    className={`flex-1 h-9 rounded text-xs font-semibold border-2 transition-colors ${
+                      theme === t.value ? 'border-accent' : 'border-transparent'
+                    }`}
+                  >
+                    {t.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Font family */}
+            <div>
+              <p className="text-xs text-gray-500 mb-2 uppercase tracking-wide">Font chữ</p>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => updateFamily('sans')}
+                  className={`flex-1 h-9 rounded text-sm transition-colors font-sans ${
+                    fontFamily === 'sans' ? 'bg-accent text-white' : 'bg-deep text-gray-400 hover:text-white'
+                  }`}
+                >
+                  Sans
+                </button>
+                <button
+                  onClick={() => updateFamily('serif')}
+                  className={`flex-1 h-9 rounded text-sm transition-colors font-serif ${
+                    fontFamily === 'serif' ? 'bg-accent text-white' : 'bg-deep text-gray-400 hover:text-white'
+                  }`}
+                >
+                  Serif
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
       <div className="flex flex-1 relative">
         {/* Sidebar */}
         <aside
@@ -259,12 +370,7 @@ export function ReadingScrollView({
         >
           <div className="p-4 border-b border-deep flex items-center justify-between">
             <span className="text-white font-semibold text-sm">Danh sách chương</span>
-            <button
-              onClick={() => setSidebarOpen(false)}
-              className="lg:hidden text-gray-400 hover:text-white"
-            >
-              ✕
-            </button>
+            <button onClick={() => setSidebarOpen(false)} className="lg:hidden text-gray-400 hover:text-white">✕</button>
           </div>
           <div className="p-2 border-b border-deep">
             <form
@@ -285,12 +391,7 @@ export function ReadingScrollView({
                 placeholder="Tới chương..."
                 className="flex-1 bg-deep border border-deep rounded px-2 py-1 text-white text-xs placeholder-gray-500 focus:outline-none focus:border-accent"
               />
-              <button
-                type="submit"
-                className="bg-accent text-white text-xs px-2 py-1 rounded hover:opacity-90"
-              >
-                →
-              </button>
+              <button type="submit" className="bg-accent text-white text-xs px-2 py-1 rounded hover:opacity-90">→</button>
             </form>
           </div>
           <div className="overflow-y-auto h-full pb-20">
@@ -312,15 +413,11 @@ export function ReadingScrollView({
           </div>
         </aside>
 
-        {/* Mobile sidebar overlay */}
         {sidebarOpen && (
-          <div
-            className="fixed inset-0 bg-black/60 z-20 lg:hidden"
-            onClick={() => setSidebarOpen(false)}
-          />
+          <div className="fixed inset-0 bg-black/60 z-20 lg:hidden" onClick={() => setSidebarOpen(false)} />
         )}
 
-        {/* Scrollable content — tap to show bars */}
+        {/* Reading content */}
         <main
           className="flex-1 max-w-3xl mx-auto px-4 py-8"
           ref={contentRef}
@@ -329,7 +426,9 @@ export function ReadingScrollView({
           {pages.map((page, i) => (
             <section key={page.id} data-page={page.number}>
               <div
-                className={`text-gray-200 leading-relaxed ${FONT_CLASSES[fontSize]}`}
+                className={`leading-relaxed ${FONT_CLASSES[fontSize]} ${tc.text} ${
+                  fontFamily === 'serif' ? 'font-serif' : 'font-sans'
+                }`}
                 style={{ whiteSpace: 'pre-wrap' }}
               >
                 {page.content}
@@ -340,7 +439,44 @@ export function ReadingScrollView({
         </main>
       </div>
 
-      {/* BottomBar */}
+      {/* Auto-advance banner */}
+      {showAutoAdvance && nextChapter && (
+        <div className="fixed bottom-16 left-0 right-0 z-45 flex justify-center px-4 pointer-events-none">
+          <div className="bg-surface border border-accent rounded-xl shadow-2xl px-5 py-4 max-w-sm w-full pointer-events-auto">
+            <p className="text-xs text-gray-400 mb-1">Chương tiếp theo</p>
+            <p className="text-white font-semibold text-sm mb-3 truncate">
+              Ch.{nextChapter.number}{nextChapter.title ? ` – ${nextChapter.title}` : ''}
+            </p>
+            {/* Countdown progress */}
+            <div className="h-1 bg-deep rounded-full mb-3 overflow-hidden">
+              <div
+                className="h-full bg-accent rounded-full transition-[width] duration-1000"
+                style={{ width: `${((AUTO_ADVANCE_SECONDS - countdown) / AUTO_ADVANCE_SECONDS) * 100}%` }}
+              />
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => {
+                  setShowAutoAdvance(false)
+                  setCountdown(AUTO_ADVANCE_SECONDS)
+                  if (countdownRef.current) { clearInterval(countdownRef.current); countdownRef.current = null }
+                }}
+                className="flex-1 h-9 bg-deep text-gray-300 hover:text-white rounded text-sm"
+              >
+                Huỷ
+              </button>
+              <button
+                onClick={() => router.push(`/stories/${slug}/chapters/${nextChapter.number}`)}
+                className="flex-1 h-9 bg-accent text-white rounded text-sm font-medium hover:opacity-90"
+              >
+                Đọc ngay ({countdown}s)
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Bottom bar */}
       <footer
         className={`bg-surface border-t border-deep sticky bottom-0 z-40 transform transition-transform duration-300 ${
           barsVisible ? 'translate-y-0' : 'translate-y-full'
@@ -349,9 +485,7 @@ export function ReadingScrollView({
         <div className="max-w-3xl mx-auto px-3 py-2 flex items-center gap-2">
           {prevChapter ? (
             <button
-              onClick={() =>
-                router.push(`/stories/${slug}/chapters/${prevChapter.number}`)
-              }
+              onClick={() => router.push(`/stories/${slug}/chapters/${prevChapter.number}`)}
               className="min-w-[44px] min-h-[44px] flex items-center justify-center gap-1 bg-deep text-gray-300 hover:text-white px-3 rounded text-sm active:scale-95 transition-transform"
             >
               <span>←</span>
@@ -362,15 +496,9 @@ export function ReadingScrollView({
           )}
 
           <div className="flex-1 flex items-center justify-center gap-3">
-            {session && saveStatus === 'saved' && (
-              <span className="text-green-500 text-xs">✓ Đã lưu</span>
-            )}
-            {session && saveStatus === 'saving' && (
-              <span className="text-gray-500 text-xs">...</span>
-            )}
-            {session && saveStatus === 'error' && (
-              <span className="text-red-500 text-xs">✗</span>
-            )}
+            {session && saveStatus === 'saved'  && <span className="text-green-500 text-xs">✓ Đã lưu</span>}
+            {session && saveStatus === 'saving' && <span className="text-gray-500 text-xs">...</span>}
+            {session && saveStatus === 'error'  && <span className="text-red-500 text-xs">✗</span>}
             <button
               onClick={scrollToTop}
               className="text-gray-400 hover:text-white text-xs px-2 py-1 rounded hover:bg-deep"
@@ -381,18 +509,14 @@ export function ReadingScrollView({
 
           {nextChapter ? (
             <button
-              onClick={() =>
-                router.push(`/stories/${slug}/chapters/${nextChapter.number}`)
-              }
+              onClick={() => router.push(`/stories/${slug}/chapters/${nextChapter.number}`)}
               className="min-w-[44px] min-h-[44px] flex items-center justify-center gap-1 bg-accent text-white px-3 rounded text-sm hover:opacity-90 active:scale-95 transition-transform"
             >
               <span className="hidden sm:inline">Ch.Tiếp</span>
               <span>→</span>
             </button>
           ) : (
-            <div className="min-w-[44px] min-h-[44px] flex items-center justify-center text-gray-600 text-sm">
-              Hết
-            </div>
+            <div className="min-w-[44px] min-h-[44px] flex items-center justify-center text-gray-600 text-sm">Hết</div>
           )}
         </div>
       </footer>

@@ -235,19 +235,30 @@ export function ReadingScrollView({
         }`}
       >
         <div className="max-w-3xl mx-auto px-3 h-12 flex items-center gap-2">
-          <Link
-            href={`/stories/${slug}`}
-            className="text-accent font-bold text-base shrink-0 min-w-[36px] text-center"
-            aria-label={`Quay lại ${story.title}`}
-          >
-            📖
-          </Link>
-          <nav className="flex items-center gap-1 text-xs text-gray-400 flex-1 min-w-0">
-            <Link href={`/stories/${slug}`} className="hover:text-white truncate hidden sm:block">
+          {/* Breadcrumb: Home › Story › Chapter */}
+          <nav className="flex items-center gap-1.5 flex-1 min-w-0 overflow-hidden">
+            {/* Home icon — one tap to home page */}
+            <Link
+              href="/"
+              title="Trang chủ"
+              className="shrink-0 flex items-center justify-center w-8 h-8 rounded hover:bg-deep text-gray-300 hover:text-white transition-colors"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round"
+                  d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+              </svg>
+            </Link>
+            <span className="text-gray-600 shrink-0">›</span>
+            {/* Story title — hidden on very small screens */}
+            <Link
+              href={`/stories/${slug}`}
+              className="text-gray-400 hover:text-white text-sm truncate hidden sm:block transition-colors"
+            >
               {story.title}
             </Link>
-            <span className="mx-1 hidden sm:block">›</span>
-            <span className="text-gray-300 truncate">
+            <span className="text-gray-600 shrink-0 hidden sm:block">›</span>
+            {/* Chapter — always visible */}
+            <span className="text-gray-200 text-sm truncate">
               Ch.{chapter.number}{chapter.title ? ` – ${chapter.title}` : ''}
             </span>
           </nav>

@@ -36,7 +36,11 @@ export function ChapterList({ chapters, slug, currentChapterId, currentChapterNu
             <Link
               key={ch.id}
               href={`/stories/${slug}/chapters/${ch.number}`}
-              className={`flex items-center gap-3 px-4 py-3 hover:bg-deep transition-colors ${isCurrent ? 'bg-deep' : ''}`}
+              className={`flex items-center gap-3 px-4 py-3 min-h-[44px] border-l-2 transition-colors ${
+                isCurrent
+                  ? 'bg-deep border-accent'
+                  : 'border-transparent hover:bg-deep hover:border-accent'
+              }`}
             >
               <span className={`text-sm w-12 shrink-0 ${isCurrent ? 'text-accent font-semibold' : 'text-gray-500'}`}>
                 Ch.{ch.number}

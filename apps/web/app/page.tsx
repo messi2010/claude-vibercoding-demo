@@ -1,30 +1,26 @@
 import { getSession } from '../lib/auth'
-import { apiCall } from '../lib/api'
-import type { PaginatedResponse, StoryResponse, ReadingProgress } from '@truyen/types'
+import { getStories, getProgress } from '../lib/cached-api'
 import { Navbar } from './components/Navbar'
 import { HomeStories } from './components/HomeStories'
+import type { ReadingProgress } from '@truyen/types'
 
 export default async function Home() {
-  const session = await getSession()
-
-  const [storiesResult, progressResult] = await Promise.allSettled([
-    apiCall<PaginatedResponse<StoryResponse>>('/stories?page=1'),
-    session?.accessToken
-      ? apiCall<ReadingProgress[]>('/progress', { userToken: session.accessToken })
-      : Promise.resolve(null),
+  // Session and stories fetched in parallel — stories are public, no token needed
+  const [session, storiesResult] = await Promise.all([
+    getSession(),
+    getStories().catch(() => null),
   ])
 
-  const stories =
-    storiesResult.status === 'fulfilled' ? storiesResult.value.items : []
-  const progress =
-    progressResult.status === 'fulfilled' && progressResult.value
-      ? progressResult.value
-      : null
+  const stories = storiesResult?.items ?? []
+
+  const progress: ReadingProgress[] | null = session?.accessToken
+    ? await getProgress(session.accessToken).catch(() => null)
+    : null
 
   return (
     <>
       <Navbar />
-      <main className="max-w-7xl mx-auto px-4 py-8">
+      <main className="max-w-7xl mx-auto px-4 py-8 animate-fade-in">
         <HomeStories stories={stories} progress={progress} />
       </main>
     </>
